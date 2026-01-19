@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
 
-const BASE_URL = 'https://poker-range-builder.vercel.app';
+const BASE_URL = 'https://rangedeck.app';
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -16,6 +16,26 @@ export default function robots(): MetadataRoute.Robots {
       },
       {
         userAgent: 'Bingbot',
+        allow: '/',
+      },
+      {
+        userAgent: 'GPTBot',
+        allow: '/',
+      },
+      {
+        userAgent: 'ChatGPT-User',
+        allow: '/',
+      },
+      {
+        userAgent: 'Claude-Web',
+        allow: '/',
+      },
+      {
+        userAgent: 'anthropic-ai',
+        allow: '/',
+      },
+      {
+        userAgent: 'Applebot',
         allow: '/',
       },
     ],

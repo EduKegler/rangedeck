@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input } from '@heroui/react';
+import { X, AlertCircle } from 'lucide-react';
 import type { Category } from '../types/range';
 
 interface CategoryModalProps {
@@ -12,53 +12,85 @@ interface CategoryModalProps {
 
 export default function CategoryModal({ category, onSave, onClose }: CategoryModalProps) {
   const [name, setName] = useState(category?.name || '');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     setName(category?.name || '');
+    setError('');
   }, [category]);
 
   const handleSave = () => {
     if (name.trim()) {
       onSave(name.trim());
     } else {
-      alert('Please enter a category name');
+      setError('Please enter a category name');
     }
   };
 
+  const handleChange = (value: string) => {
+    setName(value);
+    if (error) setError('');
+  };
+
   return (
-    <Modal isOpen={true} onOpenChange={(open) => !open && onClose()} classNames={{ backdrop: "bg-black/50" }}>
-      <ModalContent className="bg-[#1f2937] border border-slate-700">
-        {(onModalClose) => (
-          <>
-            <ModalHeader className="text-white">
+    <div className="fixed inset-0 z-50">
+      <div 
+        className="absolute inset-0 bg-[#0b1019]/60 backdrop-blur-[2px]"
+        onClick={onClose}
+      />
+      <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
+        <div className="w-full max-w-[480px] bg-[#1a2332] border border-slate-700/60 rounded-xl shadow-2xl overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-5 border-b border-slate-700/50">
+            <h2 className="text-xl font-bold text-white tracking-tight">
               {category ? 'Edit Category' : 'New Category'}
-            </ModalHeader>
-            <ModalBody>
-              <Input
-                label="Category Name"
+            </h2>
+            <button 
+              onClick={onClose}
+              className="text-slate-400 hover:text-white transition-colors p-1 rounded-full hover:bg-white/5"
+            >
+              <X size={24} />
+            </button>
+          </div>
+          <div className="p-6 flex flex-col gap-6">
+            <label className="flex flex-col gap-2">
+              <span className="text-white text-sm font-medium leading-normal">Category Name</span>
+              <input
+                type="text"
                 value={name}
-                onValueChange={setName}
-                placeholder="e.g., 4Bet, Squeeze"
-                autoFocus
+                onChange={(e) => handleChange(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSave()}
-                classNames={{
-                  input: "text-white",
-                  label: "text-slate-400",
-                  inputWrapper: "bg-slate-800 border-slate-600 hover:bg-slate-700 group-data-[focus=true]:bg-slate-800"
-                }}
+                className={`w-full bg-[#111822] border rounded-lg h-12 px-4 text-white placeholder:text-slate-500 focus:outline-none transition-all text-sm ${
+                  error 
+                    ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500' 
+                    : 'border-slate-700 focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]'
+                }`}
+                placeholder="e.g., Cash Games, MTT, 3-Bet Pots"
+                autoFocus
               />
-            </ModalBody>
-            <ModalFooter>
-              <Button variant="light" onPress={onModalClose} className="text-slate-400 hover:text-white">
-                Cancel
-              </Button>
-              <Button color="primary" onPress={handleSave} className="bg-[#3b82f6] text-white">
-                {category ? 'Save' : 'Create'}
-              </Button>
-            </ModalFooter>
-          </>
-        )}
-      </ModalContent>
-    </Modal>
+              {error && (
+                <div className="flex items-center gap-2 text-red-400 text-sm">
+                  <AlertCircle size={14} />
+                  <span>{error}</span>
+                </div>
+              )}
+            </label>
+          </div>
+          <div className="px-6 py-4 bg-[#151c28] border-t border-slate-700/50 flex justify-end gap-3">
+            <button 
+              onClick={onClose}
+              className="px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-colors"
+            >
+              Cancel
+            </button>
+            <button 
+              onClick={handleSave}
+              className="px-4 py-2 rounded-lg text-sm font-bold text-white bg-[#3b82f6] hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/20"
+            >
+              {category ? 'Save' : 'Create'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

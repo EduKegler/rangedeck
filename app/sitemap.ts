@@ -1,11 +1,10 @@
 import type { MetadataRoute } from 'next';
 
-const BASE_URL = 'https://poker-range-builder.vercel.app';
+const BASE_URL = 'https://rangedeck.app';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const currentDate = new Date().toISOString();
 
-  // Páginas estáticas principais
   const staticPages: MetadataRoute.Sitemap = [
     {
       url: BASE_URL,
@@ -15,7 +14,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  // Ranges padrão que sempre existem (para SEO)
   const defaultRanges = [
     'utg',
     'hj',

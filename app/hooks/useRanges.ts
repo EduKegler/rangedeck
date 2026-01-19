@@ -239,7 +239,7 @@ export default function useRanges() {
     URL.revokeObjectURL(url);
   };
 
-  const importFromJSON = (file: File) => {
+  const importFromJSON = (file: File, onSuccess?: () => void, onError?: (error: string) => void) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
@@ -253,9 +253,10 @@ export default function useRanges() {
         }
 
         setRangesState(data);
+        onSuccess?.();
       } catch (error) {
         console.error('Failed to import JSON:', error);
-        alert('Failed to import file. Please check the format.');
+        onError?.('Failed to import file. Please check the format.');
       }
     };
     reader.readAsText(file);
@@ -327,19 +328,20 @@ export default function useRanges() {
     });
   };
 
-  const deleteCategory = (categoryId: string) => {
+  const deleteCategory = (categoryId: string): boolean => {
+    let success = false;
     setRangesState(prev => {
       const hasRanges = (prev.rangeDefinitions || []).some(r => r.categoryId === categoryId);
       if (hasRanges) {
-        alert('Cannot delete category with ranges. Delete all ranges first.');
         return prev;
       }
-
+      success = true;
       return {
         ...prev,
         categories: (prev.categories || []).filter(c => c.id !== categoryId),
       };
     });
+    return success;
   };
 
   const createRange = (name: string, categoryId: string) => {

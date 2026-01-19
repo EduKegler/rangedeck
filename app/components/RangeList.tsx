@@ -6,7 +6,9 @@ import { GripVertical, Pencil, Trash2, Plus, PlusCircle, Upload, Download, Spade
 import RangeCard from './RangeCard';
 import CategoryModal from './CategoryModal';
 import RangeCreateModal from './RangeCreateModal';
+import ConfirmModal from './ConfirmModal';
 import { useRangesContext } from '../context/RangesContext';
+import { useToast } from './Toast';
 
 export default function RangeList() {
   const { 
@@ -24,6 +26,8 @@ export default function RangeList() {
   const router = useRouter();
   const [editingCategory, setEditingCategory] = useState<{ id: string; name: string } | null>(null);
   const [rangeModalState, setRangeModalState] = useState<{ categoryId: string; categoryName: string } | null>(null);
+  const [deletingCategory, setDeletingCategory] = useState<{ id: string; name: string } | null>(null);
+  const [deletingRange, setDeletingRange] = useState<{ id: string; name: string } | null>(null);
 
   const [draggedCategoryIndex, setDraggedCategoryIndex] = useState<number | null>(null);
   const [dragOverCategoryIndex, setDragOverCategoryIndex] = useState<number | null>(null);
@@ -33,6 +37,7 @@ export default function RangeList() {
   const [dragOverRangeId, setDragOverRangeId] = useState<string | null>(null);
   const rangeDragCounter = useRef(0);
 
+  const { showToast } = useToast();
   const categories = rangesState.categories || [];
   const rangeDefinitions = rangesState.rangeDefinitions || [];
 
@@ -44,7 +49,11 @@ export default function RangeList() {
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      importFromJSON(file);
+      importFromJSON(
+        file,
+        () => showToast('Ranges imported successfully', 'success'),
+        (error) => showToast(error, 'error')
+      );
       e.target.value = '';
     }
   };
@@ -56,28 +65,57 @@ export default function RangeList() {
   const handleSaveCategory = (name: string) => {
     if (editingCategory?.id) {
       updateCategory(editingCategory.id, name);
+      showToast('Category updated', 'success');
     } else {
       createCategory(name);
+      showToast('Category created', 'success');
     }
     setEditingCategory(null);
   };
 
-  const handleDeleteCategory = (categoryId: string) => {
-    if (confirm('Delete this category? It must be empty.')) {
-      deleteCategory(categoryId);
+  const handleDeleteCategoryClick = (categoryId: string) => {
+    const category = categories.find(c => c.id === categoryId);
+    const hasRanges = (rangesByCategory[categoryId] || []).length > 0;
+    
+    if (hasRanges) {
+      showToast('Cannot delete category with ranges. Delete all ranges first.', 'error');
+      return;
+    }
+    
+    if (category) {
+      setDeletingCategory({ id: categoryId, name: category.name });
+    }
+  };
+
+  const handleConfirmDeleteCategory = () => {
+    if (deletingCategory) {
+      const success = deleteCategory(deletingCategory.id);
+      if (success) {
+        showToast(`Category "${deletingCategory.name}" deleted`, 'success');
+      }
+      setDeletingCategory(null);
     }
   };
 
   const handleCreateRange = (name: string, categoryId: string) => {
-    const rangeId = createRange(name, categoryId);
+    createRange(name, categoryId);
     setRangeModalState(null);
-    router.push(`/edit/${rangeId}`);
+    showToast(`Range "${name}" created`, 'success');
   };
 
-  const handleDeleteRange = (e: React.MouseEvent, rangeId: string) => {
+  const handleDeleteRangeClick = (e: React.MouseEvent, rangeId: string) => {
     e.stopPropagation();
-    if (confirm('Delete this range? This action cannot be undone.')) {
-      deleteRange(rangeId);
+    const range = rangeDefinitions.find(r => r.id === rangeId);
+    if (range) {
+      setDeletingRange({ id: rangeId, name: range.name });
+    }
+  };
+
+  const handleConfirmDeleteRange = () => {
+    if (deletingRange) {
+      deleteRange(deletingRange.id);
+      showToast(`Range "${deletingRange.name}" deleted`, 'success');
+      setDeletingRange(null);
     }
   };
 
@@ -132,7 +170,6 @@ export default function RangeList() {
     categoryDragCounter.current = 0;
   };
 
-  // Range drag handlers
   const handleRangeDragStart = (e: React.DragEvent, rangeId: string) => {
     setDraggedRangeId(rangeId);
     e.dataTransfer.effectAllowed = 'move';
@@ -165,7 +202,7 @@ export default function RangeList() {
     e.dataTransfer.dropEffect = 'move';
   };
 
-  const handleRangeDrop = (e: React.DragEvent, targetRangeId: string, categoryId: string) => {
+  const handleRangeDrop = (e: React.DragEvent, targetRangeId: string) => {
     e.preventDefault();
     const data = e.dataTransfer.getData('text/plain');
     
@@ -191,7 +228,7 @@ export default function RangeList() {
           <div className="size-8 rounded bg-[#3b82f6] flex items-center justify-center text-white">
             <Spade size={20} />
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-white">Poker Ranges</h1>
+          <h1 className="text-xl font-bold tracking-tight text-white">RangeDeck</h1>
         </div>
         <div className="flex items-center gap-3">
           <label className="hidden md:flex items-center justify-center h-9 px-4 rounded border border-slate-700 hover:bg-slate-800 text-sm font-medium transition-colors cursor-pointer text-white">
@@ -221,7 +258,6 @@ export default function RangeList() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-4 md:px-4">
         <div className="mx-auto flex flex-col gap-2 pb-6">
           {categories.map((category, categoryIndex) => {
@@ -241,7 +277,6 @@ export default function RangeList() {
                 onDragOver={handleCategoryDragOver}
                 onDrop={(e) => handleCategoryDrop(e, categoryIndex)}
               >
-                {/* Category Header */}
                 <div className="flex items-center justify-between group p-2 rounded-lg hover:bg-white/5 transition-colors -ml-2">
                   <div className="flex items-center gap-3">
                     <button 
@@ -263,7 +298,7 @@ export default function RangeList() {
                         <Pencil size={16} />
                       </button>
                       <button 
-                        onClick={() => handleDeleteCategory(category.id)}
+                        onClick={() => handleDeleteCategoryClick(category.id)}
                         disabled={hasRanges}
                         className={`size-7 flex items-center justify-center rounded transition-colors ${
                           hasRanges 
@@ -290,7 +325,7 @@ export default function RangeList() {
 
                 {hasRanges ? (
                   <div className="overflow-x-auto scrollbar-hide">
-                    <div className="flex gap-3  snap-x items-stretch">
+                    <div className="flex gap-3 snap-x items-stretch">
                       {categoryRanges.map(range => {
                         const isRangeDragging = draggedRangeId === range.id;
                         const isRangeDragOver = dragOverRangeId === range.id;
@@ -304,7 +339,7 @@ export default function RangeList() {
                             onDragEnter={(e) => handleRangeDragEnter(e, range.id)}
                             onDragLeave={handleRangeDragLeave}
                             onDragOver={handleRangeDragOver}
-                            onDrop={(e) => handleRangeDrop(e, range.id, category.id)}
+                            onDrop={(e) => handleRangeDrop(e, range.id)}
                             className={`transition-all ${
                               isRangeDragging ? 'opacity-50 scale-95' : ''
                             } ${isRangeDragOver ? 'ring-2 ring-[#3b82f6] rounded-xl' : ''}`}
@@ -313,12 +348,11 @@ export default function RangeList() {
                               name={range.name}
                               rangeData={rangesState.ranges[range.id] || { labels: [], hands: {} }}
                               onClick={() => handleSelectRange(range.id)}
-                              onDelete={(e) => handleDeleteRange(e, range.id)}
+                              onDelete={(e) => handleDeleteRangeClick(e, range.id)}
                             />
                           </div>
                         );
                       })}
-                      {/* Add New Range Card */}
                       <button
                         onClick={() => setRangeModalState({ categoryId: category.id, categoryName: category.name })}
                         className="flex-none snap-start w-80 min-h-[400px] flex flex-col items-center justify-center bg-transparent rounded-xl border-2 border-dashed border-slate-700 hover:border-[#3b82f6] hover:bg-slate-800/50 transition-all cursor-pointer group"
@@ -328,7 +362,6 @@ export default function RangeList() {
                         </div>
                         <span className="text-sm font-semibold text-slate-400 group-hover:text-[#3b82f6]">Create New Range</span>
                       </button>
-                      {/* Spacer to ensure right padding works with scroll */}
                       <div className="flex-none w-px" aria-hidden="true" />
                     </div>
                   </div>
@@ -349,7 +382,6 @@ export default function RangeList() {
                   </div>
                 )}
 
-                {/* Divider */}
                 <div className="h-px w-full bg-slate-800 mt-1" />
               </section>
             );
@@ -374,7 +406,6 @@ export default function RangeList() {
         </div>
       </main>
 
-      {/* Mobile FAB */}
       <div className="fixed bottom-6 right-6 md:hidden">
         <button 
           onClick={() => setEditingCategory({ id: '', name: '' })}
@@ -398,6 +429,26 @@ export default function RangeList() {
           categoryName={rangeModalState.categoryName}
           onSave={handleCreateRange}
           onClose={() => setRangeModalState(null)}
+        />
+      )}
+
+      {deletingCategory && (
+        <ConfirmModal
+          title="Delete Category"
+          message={`Are you sure you want to delete "${deletingCategory.name}"? This action cannot be undone.`}
+          confirmLabel="Delete"
+          onConfirm={handleConfirmDeleteCategory}
+          onCancel={() => setDeletingCategory(null)}
+        />
+      )}
+
+      {deletingRange && (
+        <ConfirmModal
+          title="Delete Range"
+          message={`Are you sure you want to delete "${deletingRange.name}"? All hand data will be lost.`}
+          confirmLabel="Delete"
+          onConfirm={handleConfirmDeleteRange}
+          onCancel={() => setDeletingRange(null)}
         />
       )}
     </div>

@@ -29,15 +29,12 @@ export default function RangeCard({ name, rangeData, onClick, onDelete }: RangeC
     }))
     .filter(item => item.count > 0);
 
-  const restPercentage = 100 - labelStats.reduce((sum, item) => sum + item.percentage, 0);
-
   return (
     <div 
       onClick={onClick}
       className="flex-none snap-start w-[400px] gap-2 bg-[#1f2937] rounded-xl border border-slate-700 p-4 shadow-sm hover:border-[#3b82f6]/50 hover:shadow-md transition-all group/card relative flex flex-col cursor-pointer"
     >
-      {/* Header */}
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-2">
         <h3 className="font-bold text-white truncate flex-1">{displayName}</h3>
         <span className="text-xs font-mono-nums text-slate-400 shrink-0">{frequency}%</span>
         {onDelete && (
@@ -51,54 +48,35 @@ export default function RangeCard({ name, rangeData, onClick, onDelete }: RangeC
         )}
       </div>
 
-      {/* Grid Preview */}
       <div className="aspect-square w-full rounded overflow-hidden">
         <PokerGridPreview labels={rangeData.labels} hands={rangeData.hands} showHandNames />
       </div>
 
-      {/* Stats */}
       <div className="mt-auto flex flex-col gap-3">
-        {labelStats.length > 0 && (
-          <div>
-            <div className="flex justify-between text-[10px] text-slate-400 mb-1 uppercase tracking-wider">
-              {labelStats.slice(0, 3).map(({ label }) => (
-                <span key={label.id}>{label.name}</span>
-              ))}
-              {restPercentage > 0 && <span>-</span>}
-            </div>
-            <div className="flex h-2 w-full rounded-full overflow-hidden bg-slate-700">
-              {labelStats.slice(0, 3).map(({ label, percentage }) => (
+        <div className="flex flex-wrap gap-1.5">
+          {labelStats.length > 0 ? (
+            labelStats.map(({ label, percentage }) => (
+              <div 
+                key={label.id}
+                className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-800/80 border border-slate-700/50"
+              >
                 <div 
-                  key={label.id}
-                  style={{ 
-                    backgroundColor: label.color,
-                    width: `${percentage}%`
-                  }}
+                  className="size-2.5 rounded-full shrink-0"
+                  style={{ backgroundColor: label.color }}
                 />
-              ))}
-              {restPercentage > 0 && (
-                <div 
-                  className="bg-slate-600/50"
-                  style={{ width: `${restPercentage}%` }}
-                />
-              )}
-            </div>
-          </div>
-        )}
+                <span className="text-[10px] font-medium text-slate-300 truncate max-w-[60px]">
+                  {label.name}
+                </span>
+                <span className="text-[10px] font-mono-nums text-slate-500">
+                  {percentage.toFixed(0)}%
+                </span>
+              </div>
+            ))
+          ) : (
+            <span className="text-xs text-slate-500 italic">No labels assigned</span>
+          )}
+        </div>
 
-        {labelStats.length === 0 && (
-          <div>
-            <div className="flex justify-between text-[10px] text-slate-500 mb-1 uppercase tracking-wider">
-              <span>-</span>
-              <span>-</span>
-            </div>
-            <div className="flex h-2 w-full rounded-full overflow-hidden bg-slate-700">
-              <div className="bg-slate-600/50 w-full" />
-            </div>
-          </div>
-        )}
-
-        {/* Drag Handle */}
         <div className="flex items-center justify-center pt-2 border-t border-slate-700/50 cursor-grab active:cursor-grabbing group/handle">
           <GripHorizontal size={20} className="text-slate-600 group-hover/handle:text-[#3b82f6] transition-colors" />
         </div>

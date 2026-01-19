@@ -2,14 +2,13 @@ import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
 
-export const alt = 'Poker Range Builder - Professional Poker Range Chart Builder';
+export const alt = 'RangeDeck - Free Poker Range Builder & Hand Chart Tool';
 export const size = {
   width: 1200,
   height: 630,
 };
 export const contentType = 'image/png';
 
-// Simplified 5x5 grid showing poker range concept
 const gridData = [
   ['AA', 'AKs', 'AQs', 'AJs', 'ATs'],
   ['AKo', 'KK', 'KQs', 'KJs', 'KTs'],
@@ -41,7 +40,6 @@ export default function Image() {
           fontFamily: 'system-ui, -apple-system, sans-serif',
         }}
       >
-        {/* Background pattern */}
         <div
           style={{
             position: 'absolute',
@@ -49,11 +47,10 @@ export default function Image() {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundImage: 'radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.1) 0%, transparent 50%)',
+            backgroundImage: 'radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)',
           }}
         />
 
-        {/* Main content */}
         <div
           style={{
             display: 'flex',
@@ -63,16 +60,16 @@ export default function Image() {
             gap: '60px',
           }}
         >
-          {/* Grid visualization */}
           <div
             style={{
               display: 'flex',
               flexDirection: 'column',
               gap: '6px',
               padding: '20px',
-              background: 'rgba(0, 0, 0, 0.3)',
+              background: 'rgba(0, 0, 0, 0.4)',
               borderRadius: '20px',
               boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
             }}
           >
             {gridData.map((row, rowIndex) => (
@@ -107,93 +104,82 @@ export default function Image() {
             ))}
           </div>
 
-          {/* Text content */}
           <div
             style={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'flex-start',
-              maxWidth: '500px',
+              maxWidth: '520px',
             }}
           >
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '15px',
-                marginBottom: '20px',
+                gap: '12px',
+                marginBottom: '16px',
               }}
             >
               <div
                 style={{
-                  width: '60px',
-                  height: '60px',
-                  background: 'linear-gradient(135deg, #ef4444, #3b82f6)',
-                  borderRadius: '12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '30px',
-                }}
-              >
-                ♠️
-              </div>
-              <span
-                style={{
-                  fontSize: '28px',
-                  fontWeight: 600,
-                  color: 'rgba(255, 255, 255, 0.6)',
-                  letterSpacing: '2px',
+                  padding: '8px 16px',
+                  background: '#22c55e',
+                  borderRadius: '20px',
+                  color: 'white',
+                  fontSize: '16px',
+                  fontWeight: 700,
                   textTransform: 'uppercase',
+                  letterSpacing: '1px',
                 }}
               >
-                Poker Tool
-              </span>
+                100% Free
+              </div>
             </div>
 
             <h1
               style={{
-                fontSize: '56px',
+                fontSize: '64px',
                 fontWeight: 800,
                 color: 'white',
                 lineHeight: 1.1,
                 margin: 0,
-                marginBottom: '20px',
+                marginBottom: '12px',
+                letterSpacing: '-2px',
               }}
             >
-              Range Builder
+              RangeDeck
             </h1>
 
             <p
               style={{
-                fontSize: '24px',
-                color: 'rgba(255, 255, 255, 0.8)',
-                lineHeight: 1.5,
+                fontSize: '28px',
+                color: 'rgba(255, 255, 255, 0.7)',
+                lineHeight: 1.4,
                 margin: 0,
+                marginBottom: '24px',
               }}
             >
-              Build, organize and study your poker ranges like a professional
+              Build & study poker hand ranges with interactive charts
             </p>
 
-            {/* Feature pills */}
             <div
               style={{
                 display: 'flex',
                 gap: '12px',
-                marginTop: '30px',
                 flexWrap: 'wrap',
               }}
             >
-              {['Free', 'Offline', 'Exportable'].map((feature) => (
+              {['No Signup', 'Offline Ready', 'Export/Import'].map((feature) => (
                 <span
                   key={feature}
                   style={{
-                    padding: '8px 16px',
+                    padding: '10px 18px',
                     background: 'rgba(255, 255, 255, 0.1)',
-                    borderRadius: '20px',
+                    borderRadius: '24px',
                     color: 'rgba(255, 255, 255, 0.9)',
                     fontSize: '16px',
                     fontWeight: 500,
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
                   }}
                 >
                   {feature}
@@ -203,7 +189,6 @@ export default function Image() {
           </div>
         </div>
 
-        {/* Bottom accent line */}
         <div
           style={{
             position: 'absolute',

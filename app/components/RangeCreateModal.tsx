@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input } from '@heroui/react';
+import { X, AlertCircle } from 'lucide-react';
 
 interface RangeCreateModalProps {
   categoryId: string;
@@ -12,49 +12,78 @@ interface RangeCreateModalProps {
 
 export default function RangeCreateModal({ categoryId, categoryName, onSave, onClose }: RangeCreateModalProps) {
   const [name, setName] = useState('');
+  const [error, setError] = useState('');
 
   const handleSave = () => {
     if (name.trim()) {
       onSave(name.trim(), categoryId);
     } else {
-      alert('Please enter a range name');
+      setError('Please enter a range name');
     }
   };
 
+  const handleChange = (value: string) => {
+    setName(value);
+    if (error) setError('');
+  };
+
   return (
-    <Modal isOpen={true} onOpenChange={(open) => !open && onClose()} classNames={{ backdrop: "bg-black/50" }}>
-      <ModalContent className="bg-[#1f2937] border border-slate-700">
-        {(onModalClose) => (
-          <>
-            <ModalHeader className="text-white">
-              New Range in {categoryName}
-            </ModalHeader>
-            <ModalBody>
-              <Input
-                label="Range Name"
+    <div className="fixed inset-0 z-50">
+      <div 
+        className="absolute inset-0 bg-[#0b1019]/60 backdrop-blur-[2px]"
+        onClick={onClose}
+      />
+      <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
+        <div className="w-full max-w-[480px] bg-[#1a2332] border border-slate-700/60 rounded-xl shadow-2xl overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-5 border-b border-slate-700/50">
+            <h2 className="text-xl font-bold text-white tracking-tight">New Range</h2>
+            <button 
+              onClick={onClose}
+              className="text-slate-400 hover:text-white transition-colors p-1 rounded-full hover:bg-white/5"
+            >
+              <X size={24} />
+            </button>
+          </div>
+          <div className="p-6 flex flex-col gap-6">
+            <label className="flex flex-col gap-2">
+              <span className="text-white text-sm font-medium leading-normal">Range Name</span>
+              <input
+                type="text"
                 value={name}
-                onValueChange={setName}
-                placeholder="e.g., MP vs BTN, EP vs BB"
-                autoFocus
+                onChange={(e) => handleChange(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSave()}
-                classNames={{
-                  input: "text-white",
-                  label: "text-slate-400",
-                  inputWrapper: "bg-slate-800 border-slate-600 hover:bg-slate-700 group-data-[focus=true]:bg-slate-800"
-                }}
+                className={`w-full bg-[#111822] border rounded-lg h-12 px-4 text-white placeholder:text-slate-500 focus:outline-none transition-all text-sm ${
+                  error 
+                    ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500' 
+                    : 'border-slate-700 focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]'
+                }`}
+                placeholder="e.g., RFI 2.5x from UTG"
+                autoFocus
               />
-            </ModalBody>
-            <ModalFooter>
-              <Button variant="light" onPress={onModalClose} className="text-slate-400 hover:text-white">
-                Cancel
-              </Button>
-              <Button color="primary" onPress={handleSave} className="bg-[#3b82f6] text-white">
-                Create
-              </Button>
-            </ModalFooter>
-          </>
-        )}
-      </ModalContent>
-    </Modal>
+              {error && (
+                <div className="flex items-center gap-2 text-red-400 text-sm">
+                  <AlertCircle size={14} />
+                  <span>{error}</span>
+                </div>
+              )}
+            </label>
+          </div>
+          <div className="px-6 py-4 bg-[#151c28] border-t border-slate-700/50 flex justify-end gap-3">
+            <button 
+              onClick={onClose}
+              className="px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-colors"
+            >
+              Cancel
+            </button>
+            <button 
+              onClick={handleSave}
+              className="px-4 py-2 rounded-lg text-sm font-bold text-white bg-[#3b82f6] hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/20"
+            >
+              Save Range
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
