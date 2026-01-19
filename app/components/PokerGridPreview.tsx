@@ -36,7 +36,7 @@ export default function PokerGridPreview({ labels, hands, showHandNames = false 
                 title={label ? `${hand} - ${label.name}` : hand}
               >
                 {showHandNames && (
-                  <span className="text-[6px] sm:text-[7px] font-bold text-white/90 grid-text leading-none">
+                  <span className="text-[10px] sm:text-[11px] font-bold text-white grid-text leading-none drop-shadow-sm">
                     {hand}
                   </span>
                 )}
