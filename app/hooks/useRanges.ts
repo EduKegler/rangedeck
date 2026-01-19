@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import type { RangesState, RangeData, Label, Category, RangeDefinition } from '../types/range';
+import { useState, useEffect } from 'react';
+import type { RangesState, RangeData, Label } from '../types/range';
 import { DEFAULT_CATEGORIES, DEFAULT_RANGE_DEFINITIONS } from '../types/range';
 
 const STORAGE_KEY = 'poker-ranges-data';
@@ -36,7 +36,6 @@ export default function useRanges() {
   const [rangesState, setRangesState] = useState<RangesState>(getInitialRanges);
   const [isHydrated, setIsHydrated] = useState(false);
 
-  // Load from localStorage on client-side hydration
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -86,7 +85,6 @@ export default function useRanges() {
           }
         }
 
-        // Ensure categories and rangeDefinitions exist
         if (!data.categories) {
           data.categories = [...DEFAULT_CATEGORIES];
         }
@@ -102,17 +100,15 @@ export default function useRanges() {
     setIsHydrated(true);
   }, []);
 
-  // Save to localStorage when state changes (only after hydration)
   useEffect(() => {
     if (isHydrated) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(rangesState));
     }
   }, [rangesState, isHydrated]);
 
-  const getRangeData = useCallback((rangeId: string): RangeData => {
+  const getRangeData = (rangeId: string): RangeData => {
     const rangeData = rangesState.ranges[rangeId];
 
-    // If range has no labels, auto-create and persist an Example label
     if (rangeData && rangeData.labels.length === 0) {
       const exampleLabelId = generateLabelId();
       const newRangeData = {
@@ -124,7 +120,6 @@ export default function useRanges() {
         }],
       };
 
-      // Persist the Example label (preserve other state properties)
       setRangesState(prev => ({
         ...prev,
         ranges: {
@@ -137,9 +132,9 @@ export default function useRanges() {
     }
 
     return rangeData || { labels: [], hands: {}, customName: undefined };
-  }, [rangesState]);
+  };
 
-  const createLabel = useCallback((rangeId: string, name: string, color: string) => {
+  const createLabel = (rangeId: string, name: string, color: string) => {
     const labelId = generateLabelId();
     setRangesState(prev => {
       const newRanges = { ...prev.ranges };
@@ -151,9 +146,9 @@ export default function useRanges() {
       return { ...prev, ranges: newRanges };
     });
     return labelId;
-  }, []);
+  };
 
-  const updateLabel = useCallback((rangeId: string, labelId: string, name: string, color: string) => {
+  const updateLabel = (rangeId: string, labelId: string, name: string, color: string) => {
     setRangesState(prev => {
       const newRanges = { ...prev.ranges };
       const rangeData = { ...newRanges[rangeId] };
@@ -166,14 +161,13 @@ export default function useRanges() {
 
       return { ...prev, ranges: newRanges };
     });
-  }, []);
+  };
 
-  const deleteLabel = useCallback((rangeId: string, labelId: string) => {
+  const deleteLabel = (rangeId: string, labelId: string) => {
     setRangesState(prev => {
       const newRanges = { ...prev.ranges };
       const rangeData = { ...newRanges[rangeId] };
 
-      // Prevent deletion of last label
       if (rangeData.labels.length === 1) {
         return prev;
       }
@@ -192,9 +186,9 @@ export default function useRanges() {
 
       return { ...prev, ranges: newRanges };
     });
-  }, []);
+  };
 
-  const setHandLabel = useCallback((rangeId: string, hand: string, labelId: string | null) => {
+  const setHandLabel = (rangeId: string, hand: string, labelId: string | null) => {
     setRangesState(prev => {
       const newRanges = { ...prev.ranges };
       const rangeData = { ...newRanges[rangeId] };
@@ -211,9 +205,9 @@ export default function useRanges() {
 
       return { ...prev, ranges: newRanges };
     });
-  }, []);
+  };
 
-  const setMultipleHandLabels = useCallback((rangeId: string, hands: string[], labelId: string | null) => {
+  const setMultipleHandLabels = (rangeId: string, hands: string[], labelId: string | null) => {
     setRangesState(prev => {
       const newRanges = { ...prev.ranges };
       const rangeData = { ...newRanges[rangeId] };
@@ -232,9 +226,9 @@ export default function useRanges() {
 
       return { ...prev, ranges: newRanges };
     });
-  }, []);
+  };
 
-  const exportToJSON = useCallback(() => {
+  const exportToJSON = () => {
     const dataStr = JSON.stringify(rangesState, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(dataBlob);
@@ -243,15 +237,14 @@ export default function useRanges() {
     link.download = 'poker-ranges.json';
     link.click();
     URL.revokeObjectURL(url);
-  }, [rangesState]);
+  };
 
-  const importFromJSON = useCallback((file: File) => {
+  const importFromJSON = (file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
         const data = JSON.parse(e.target?.result as string);
 
-        // Ensure categories and rangeDefinitions exist
         if (!data.categories) {
           data.categories = [...DEFAULT_CATEGORIES];
         }
@@ -266,9 +259,9 @@ export default function useRanges() {
       }
     };
     reader.readAsText(file);
-  }, []);
+  };
 
-  const setRangeName = useCallback((rangeId: string, customName: string) => {
+  const setRangeName = (rangeId: string, customName: string) => {
     setRangesState(prev => {
       const newRanges = { ...prev.ranges };
       const rangeData = { ...newRanges[rangeId] };
@@ -276,9 +269,9 @@ export default function useRanges() {
       newRanges[rangeId] = rangeData;
       return { ...prev, ranges: newRanges };
     });
-  }, []);
+  };
 
-  const reorderLabel = useCallback((rangeId: string, labelId: string, direction: 'up' | 'down') => {
+  const reorderLabel = (rangeId: string, labelId: string, direction: 'up' | 'down') => {
     setRangesState(prev => {
       const newRanges = { ...prev.ranges };
       const rangeData = { ...newRanges[rangeId] };
@@ -297,27 +290,27 @@ export default function useRanges() {
       newRanges[rangeId] = rangeData;
       return { ...prev, ranges: newRanges };
     });
-  }, []);
+  };
 
-  const createCategory = useCallback((name: string) => {
+  const createCategory = (name: string) => {
     const categoryId = `cat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     setRangesState(prev => ({
       ...prev,
       categories: [...(prev.categories || []), { id: categoryId, name }],
     }));
     return categoryId;
-  }, []);
+  };
 
-  const updateCategory = useCallback((categoryId: string, name: string) => {
+  const updateCategory = (categoryId: string, name: string) => {
     setRangesState(prev => ({
       ...prev,
       categories: (prev.categories || []).map(cat =>
         cat.id === categoryId ? { ...cat, name } : cat
       ),
     }));
-  }, []);
+  };
 
-  const reorderCategory = useCallback((categoryId: string, direction: 'up' | 'down') => {
+  const reorderCategory = (categoryId: string, direction: 'up' | 'down') => {
     setRangesState(prev => {
       const categories = [...(prev.categories || [])];
       const index = categories.findIndex(c => c.id === categoryId);
@@ -332,11 +325,10 @@ export default function useRanges() {
 
       return { ...prev, categories };
     });
-  }, []);
+  };
 
-  const deleteCategory = useCallback((categoryId: string) => {
+  const deleteCategory = (categoryId: string) => {
     setRangesState(prev => {
-      // Check if category has any ranges
       const hasRanges = (prev.rangeDefinitions || []).some(r => r.categoryId === categoryId);
       if (hasRanges) {
         alert('Cannot delete category with ranges. Delete all ranges first.');
@@ -348,9 +340,9 @@ export default function useRanges() {
         categories: (prev.categories || []).filter(c => c.id !== categoryId),
       };
     });
-  }, []);
+  };
 
-  const createRange = useCallback((name: string, categoryId: string) => {
+  const createRange = (name: string, categoryId: string) => {
     const rangeId = `range_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const exampleLabelId = generateLabelId();
 
@@ -370,9 +362,9 @@ export default function useRanges() {
       },
     }));
     return rangeId;
-  }, []);
+  };
 
-  const deleteRange = useCallback((rangeId: string) => {
+  const deleteRange = (rangeId: string) => {
     setRangesState(prev => {
       const newRanges = { ...prev.ranges };
       delete newRanges[rangeId];
@@ -383,13 +375,48 @@ export default function useRanges() {
         rangeDefinitions: (prev.rangeDefinitions || []).filter(r => r.id !== rangeId),
       };
     });
-  }, []);
+  };
 
-  const clearAllRanges = useCallback(() => {
+  const reorderRange = (rangeId: string, targetIndex: number) => {
+    setRangesState(prev => {
+      const rangeDefinitions = [...(prev.rangeDefinitions || [])];
+      const currentIndex = rangeDefinitions.findIndex(r => r.id === rangeId);
+      
+      if (currentIndex === -1 || currentIndex === targetIndex) return prev;
+      
+      const [removed] = rangeDefinitions.splice(currentIndex, 1);
+      rangeDefinitions.splice(targetIndex, 0, removed);
+      
+      return { ...prev, rangeDefinitions };
+    });
+  };
+
+  const moveRangeToCategory = (rangeId: string, newCategoryId: string) => {
+    setRangesState(prev => {
+      const rangeDefinitions = (prev.rangeDefinitions || []).map(r =>
+        r.id === rangeId ? { ...r, categoryId: newCategoryId } : r
+      );
+      return { ...prev, rangeDefinitions };
+    });
+  };
+
+  const reorderCategoryByIndex = (fromIndex: number, toIndex: number) => {
+    setRangesState(prev => {
+      const categories = [...(prev.categories || [])];
+      if (fromIndex === toIndex) return prev;
+      
+      const [removed] = categories.splice(fromIndex, 1);
+      categories.splice(toIndex, 0, removed);
+      
+      return { ...prev, categories };
+    });
+  };
+
+  const clearAllRanges = () => {
     setRangesState(getInitialRanges());
-  }, []);
+  };
 
-  return useMemo(() => ({
+  return {
     rangesState,
     getRangeData,
     createLabel,
@@ -402,30 +429,14 @@ export default function useRanges() {
     createCategory,
     updateCategory,
     reorderCategory,
+    reorderCategoryByIndex,
     deleteCategory,
     createRange,
     deleteRange,
+    reorderRange,
+    moveRangeToCategory,
     exportToJSON,
     importFromJSON,
     clearAllRanges,
-  }), [
-    rangesState,
-    getRangeData,
-    createLabel,
-    updateLabel,
-    deleteLabel,
-    setHandLabel,
-    setMultipleHandLabels,
-    setRangeName,
-    reorderLabel,
-    createCategory,
-    updateCategory,
-    reorderCategory,
-    deleteCategory,
-    createRange,
-    deleteRange,
-    exportToJSON,
-    importFromJSON,
-    clearAllRanges,
-  ]);
+  };
 }

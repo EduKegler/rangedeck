@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useMemo } from 'react';
+import { Trash2, GripHorizontal } from 'lucide-react';
 import type { RangeData } from '../types/range';
 import PokerGridPreview from './PokerGridPreview';
 
@@ -8,64 +8,101 @@ interface RangeCardProps {
   name: string;
   rangeData: RangeData;
   onClick: () => void;
+  onDelete?: (e: React.MouseEvent) => void;
 }
 
-const RangeCard = memo(({ name, rangeData, onClick }: RangeCardProps) => {
+export default function RangeCard({ name, rangeData, onClick, onDelete }: RangeCardProps) {
   const displayName = rangeData.customName || name;
-  const handCount = useMemo(() => {
-    return Object.keys(rangeData.hands).length;
-  }, [rangeData.hands]);
+  const handCount = Object.keys(rangeData.hands).length;
+  const frequency = ((handCount / 169) * 100).toFixed(1);
 
-  const labelStats = useMemo(() => {
-    const counts = new Map<string, number>();
+  const counts = new Map<string, number>();
+  Object.values(rangeData.hands).forEach(labelId => {
+    counts.set(labelId, (counts.get(labelId) || 0) + 1);
+  });
 
-    Object.values(rangeData.hands).forEach(labelId => {
-      counts.set(labelId, (counts.get(labelId) || 0) + 1);
-    });
+  const labelStats = rangeData.labels
+    .map(label => ({
+      label,
+      count: counts.get(label.id) || 0,
+      percentage: ((counts.get(label.id) || 0) / 169) * 100,
+    }))
+    .filter(item => item.count > 0);
 
-    return rangeData.labels
-      .map(label => ({
-        label,
-        count: counts.get(label.id) || 0,
-      }))
-      .filter(item => item.count > 0)
-      .slice(0, 5);
-  }, [rangeData]);
+  const restPercentage = 100 - labelStats.reduce((sum, item) => sum + item.percentage, 0);
 
   return (
-    <button
+    <div 
       onClick={onClick}
-      className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 cursor-pointer transition-all hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-lg hover:-translate-y-0.5 text-left flex flex-col gap-1.5"
+      className="flex-none snap-start w-[400px] gap-2 bg-[#1f2937] rounded-xl border border-slate-700 p-4 shadow-sm hover:border-[#3b82f6]/50 hover:shadow-md transition-all group/card relative flex flex-col cursor-pointer"
     >
-      <div className="flex justify-between items-center gap-3">
-        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-50 flex-1">{displayName}</h3>
-        <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">{handCount} hands</span>
+      {/* Header */}
+      <div className="flex items-center gap-2 mb-3">
+        <h3 className="font-bold text-white truncate flex-1">{displayName}</h3>
+        <span className="text-xs font-mono-nums text-slate-400 shrink-0">{frequency}%</span>
+        {onDelete && (
+          <button 
+            onClick={(e) => { e.stopPropagation(); onDelete(e); }}
+            className="size-6 flex items-center justify-center rounded text-slate-500 hover:text-red-500 transition-colors shrink-0"
+            title="Delete Range"
+          >
+            <Trash2 size={16} />
+          </button>
+        )}
       </div>
 
-      <PokerGridPreview labels={rangeData.labels} hands={rangeData.hands} />
+      {/* Grid Preview */}
+      <div className="aspect-square w-full rounded overflow-hidden">
+        <PokerGridPreview labels={rangeData.labels} hands={rangeData.hands} showHandNames />
+      </div>
 
-      {labelStats.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {labelStats.map(({ label, count }) => (
-            <div key={label.id} className="flex items-center gap-1.5 px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded-md text-xs">
-              <span
-                className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                style={{ backgroundColor: label.color }}
-              />
-              <span className="text-gray-700 dark:text-gray-300 font-medium">{label.name}</span>
-              <span className="text-gray-500 dark:text-gray-500 text-[11px]">({count})</span>
+      {/* Stats */}
+      <div className="mt-auto flex flex-col gap-3">
+        {labelStats.length > 0 && (
+          <div>
+            <div className="flex justify-between text-[10px] text-slate-400 mb-1 uppercase tracking-wider">
+              {labelStats.slice(0, 3).map(({ label }) => (
+                <span key={label.id}>{label.name}</span>
+              ))}
+              {restPercentage > 0 && <span>-</span>}
             </div>
-          ))}
-        </div>
-      )}
+            <div className="flex h-2 w-full rounded-full overflow-hidden bg-slate-700">
+              {labelStats.slice(0, 3).map(({ label, percentage }) => (
+                <div 
+                  key={label.id}
+                  style={{ 
+                    backgroundColor: label.color,
+                    width: `${percentage}%`
+                  }}
+                />
+              ))}
+              {restPercentage > 0 && (
+                <div 
+                  className="bg-slate-600/50"
+                  style={{ width: `${restPercentage}%` }}
+                />
+              )}
+            </div>
+          </div>
+        )}
 
-      {labelStats.length === 0 && (
-        <div className="text-gray-400 dark:text-gray-500 text-sm italic">
-          No actions defined
+        {labelStats.length === 0 && (
+          <div>
+            <div className="flex justify-between text-[10px] text-slate-500 mb-1 uppercase tracking-wider">
+              <span>-</span>
+              <span>-</span>
+            </div>
+            <div className="flex h-2 w-full rounded-full overflow-hidden bg-slate-700">
+              <div className="bg-slate-600/50 w-full" />
+            </div>
+          </div>
+        )}
+
+        {/* Drag Handle */}
+        <div className="flex items-center justify-center pt-2 border-t border-slate-700/50 cursor-grab active:cursor-grabbing group/handle">
+          <GripHorizontal size={20} className="text-slate-600 group-hover/handle:text-[#3b82f6] transition-colors" />
         </div>
-      )}
-    </button>
+      </div>
+    </div>
   );
-});
-
-export default RangeCard;
+}

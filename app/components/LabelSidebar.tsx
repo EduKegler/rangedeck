@@ -1,6 +1,7 @@
 'use client';
 
-import { memo, useCallback } from 'react';
+import { useState, useRef } from 'react';
+import { Plus, GripVertical, Pencil, Trash2 } from 'lucide-react';
 import type { Label } from '../types/range';
 
 interface LabelSidebarProps {
@@ -14,7 +15,7 @@ interface LabelSidebarProps {
   handCounts: { [labelId: string]: number };
 }
 
-const LabelSidebar = memo(({
+export default function LabelSidebar({
   labels,
   activeLabelId,
   onSelectLabel,
@@ -23,14 +24,18 @@ const LabelSidebar = memo(({
   onDeleteLabel,
   onMoveLabel,
   handCounts,
-}: LabelSidebarProps) => {
-  const handleLabelClick = useCallback((labelId: string) => {
-    // Always select the label, don't toggle off
-    onSelectLabel(labelId);
-  }, [onSelectLabel]);
+}: LabelSidebarProps) {
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const dragCounter = useRef(0);
 
-  const handleDeleteLabel = useCallback((e: React.MouseEvent, labelId: string) => {
-    e.stopPropagation();
+  const totalHands = Object.values(handCounts).reduce((sum, count) => sum + count, 0);
+
+  const handleLabelClick = (labelId: string) => {
+    onSelectLabel(labelId);
+  };
+
+  const handleDeleteLabel = (labelId: string) => {
     if (labels.length === 1) {
       alert('Cannot delete the last label. At least one label must exist.');
       return;
@@ -38,124 +43,191 @@ const LabelSidebar = memo(({
     if (confirm('Delete this label? All hands with this label will be cleared.')) {
       onDeleteLabel(labelId);
     }
-  }, [onDeleteLabel, labels.length]);
+  };
 
-  const handleEditLabel = useCallback((e: React.MouseEvent, label: Label) => {
-    e.stopPropagation();
+  const handleEditLabel = (label: Label) => {
     onEditLabel(label);
-  }, [onEditLabel]);
+  };
 
-  const handleMoveUp = useCallback((e: React.MouseEvent, labelId: string) => {
-    e.stopPropagation();
-    onMoveLabel(labelId, 'up');
-  }, [onMoveLabel]);
+  const getPercentage = (labelId: string) => {
+    const count = handCounts[labelId] || 0;
+    if (totalHands === 0) return 0;
+    return Math.round((count / totalHands) * 100);
+  };
 
-  const handleMoveDown = useCallback((e: React.MouseEvent, labelId: string) => {
-    e.stopPropagation();
-    onMoveLabel(labelId, 'down');
-  }, [onMoveLabel]);
+  const handleDragStart = (e: React.DragEvent, labelId: string) => {
+    setDraggedId(labelId);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', labelId);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedId(null);
+    setDragOverId(null);
+    dragCounter.current = 0;
+  };
+
+  const handleDragEnter = (e: React.DragEvent, labelId: string) => {
+    e.preventDefault();
+    dragCounter.current++;
+    if (labelId !== draggedId) {
+      setDragOverId(labelId);
+    }
+  };
+
+  const handleDragLeave = () => {
+    dragCounter.current--;
+    if (dragCounter.current === 0) {
+      setDragOverId(null);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    const sourceId = e.dataTransfer.getData('text/plain');
+    
+    if (sourceId && sourceId !== targetId) {
+      const sourceIndex = labels.findIndex(l => l.id === sourceId);
+      const targetIndex = labels.findIndex(l => l.id === targetId);
+      
+      if (sourceIndex !== -1 && targetIndex !== -1) {
+        if (sourceIndex < targetIndex) {
+          for (let i = sourceIndex; i < targetIndex; i++) {
+            onMoveLabel(sourceId, 'down');
+          }
+        } else {
+          for (let i = sourceIndex; i > targetIndex; i--) {
+            onMoveLabel(sourceId, 'up');
+          }
+        }
+      }
+    }
+    
+    setDraggedId(null);
+    setDragOverId(null);
+    dragCounter.current = 0;
+  };
 
   return (
-    <div className="w-[280px] bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex flex-col h-full max-lg:w-[240px] max-md:w-full max-md:h-auto max-md:max-h-[40vh] max-md:border-l-0 max-md:border-t">
-      <div className="px-5 py-5 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">Labels</h3>
+    <aside className="w-80 shrink-0 border-r border-[#223149] bg-[#162030] flex flex-col z-0 max-lg:w-64 max-md:hidden">
+      <div className="p-4 border-b border-[#223149]">
         <button
           onClick={onCreateLabel}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+          className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg h-11 bg-[#3b82f6] hover:bg-blue-600 transition-colors text-white text-sm font-bold tracking-wide shadow-lg shadow-blue-900/30"
         >
-          + New
+          <Plus size={18} strokeWidth={2.5} />
+          New Label
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3 space-y-2 max-md:max-h-[30vh]">
-        {labels.map((label, index) => (
-          <button
-            key={label.id}
-            className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all cursor-pointer group ${
-              activeLabelId === label.id
-                ? 'bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-500 shadow-md'
-                : 'bg-gray-50 dark:bg-gray-700/50 border-2 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700 hover:border-gray-200 dark:hover:border-gray-600'
-            }`}
-            onClick={() => handleLabelClick(label.id)}
-          >
+      <div className="flex-1 overflow-y-auto p-2 space-y-1">
+        <p className="px-3 py-2 text-xs font-semibold text-[#90a7cb] uppercase tracking-wider">
+          Strategy Actions
+        </p>
+        
+        {labels.map((label) => {
+          const isActive = activeLabelId === label.id;
+          const count = handCounts[label.id] || 0;
+          const percentage = getPercentage(label.id);
+          const isDragging = draggedId === label.id;
+          const isDragOver = dragOverId === label.id;
+          
+          return (
             <div
-              className="w-8 h-8 rounded-lg flex-shrink-0"
-              style={{ backgroundColor: label.color }}
-            />
-            <div className="flex-1 min-w-0 flex flex-col gap-0.5 text-left">
-              <span className="text-sm font-semibold text-gray-900 dark:text-gray-50 truncate">
-                {label.name}
-              </span>
-              <span className="text-xs text-gray-600 dark:text-gray-400">
-                {handCounts[label.id] || 0} hands
-              </span>
-            </div>
-            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <div className="flex flex-col gap-0.5">
+              key={label.id}
+              draggable
+              onDragStart={(e) => handleDragStart(e, label.id)}
+              onDragEnd={handleDragEnd}
+              onDragEnter={(e) => handleDragEnter(e, label.id)}
+              onDragLeave={handleDragLeave}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, label.id)}
+              onClick={() => handleLabelClick(label.id)}
+              className={`group flex items-center gap-2 px-2 py-2.5 rounded-lg cursor-grab active:cursor-grabbing transition-all border ${
+                isDragging 
+                  ? 'opacity-50 scale-95' 
+                  : isDragOver 
+                    ? 'border-blue-500 bg-blue-500/10' 
+                    : isActive 
+                      ? 'bg-[#223149]/60 border-[#223149]' 
+                      : 'bg-transparent border-transparent hover:bg-[#223149]/40 hover:border-[#223149]'
+              } ${count === 0 && !isDragging ? 'opacity-60 hover:opacity-100' : ''}`}
+            >
+              <GripVertical 
+                size={16} 
+                className="text-[#90a7cb]/50 group-hover:text-[#90a7cb] transition-colors shrink-0" 
+              />
+              
+              <div 
+                className="size-4 rounded-full shrink-0"
+                style={{ 
+                  backgroundColor: label.color,
+                  boxShadow: count > 0 ? `0 0 8px ${label.color}66` : 'none'
+                }}
+              />
+              
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-center mb-0.5">
+                  <p className="text-white text-sm font-medium truncate">
+                    {label.name}
+                  </p>
+                  <span className={`text-[10px] font-mono-nums ${isActive ? 'text-[#3b82f6] font-bold' : 'text-[#90a7cb]'}`}>
+                    {percentage}%
+                  </span>
+                </div>
+                
+                {count > 0 && (
+                  <div className="w-full bg-gray-700 h-1 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full rounded-full transition-all duration-300"
+                      style={{ 
+                        backgroundColor: label.color,
+                        width: `${percentage}%`
+                      }}
+                    />
+                  </div>
+                )}
+                
+                {count === 0 && (
+                  <p className="text-[10px] text-[#90a7cb]">No hands</p>
+                )}
+              </div>
+
+              <div className="h-6 w-px bg-[#223149] mx-1" />
+
+              <div className="flex gap-0.5">
                 <button
-                  onClick={(e) => handleMoveUp(e, label.id)}
-                  disabled={index === 0}
-                  className="w-6 h-3 flex items-center justify-center bg-white dark:bg-gray-800 rounded text-[10px] hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                  title="Move up"
+                  onClick={(e) => { e.stopPropagation(); handleEditLabel(label); }}
+                  className="text-[#90a7cb] hover:text-white p-1.5 rounded hover:bg-white/10"
+                  title="Edit"
                 >
-                  ▲
+                  <Pencil size={14} />
                 </button>
                 <button
-                  onClick={(e) => handleMoveDown(e, label.id)}
-                  disabled={index === labels.length - 1}
-                  className="w-6 h-3 flex items-center justify-center bg-white dark:bg-gray-800 rounded text-[10px] hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                  title="Move down"
+                  onClick={(e) => { e.stopPropagation(); handleDeleteLabel(label.id); }}
+                  disabled={labels.length === 1}
+                  className="text-[#90a7cb] hover:text-red-400 p-1.5 rounded hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
+                  title={labels.length === 1 ? "Cannot delete last label" : "Delete"}
                 >
-                  ▼
+                  <Trash2 size={14} />
                 </button>
               </div>
-              <button
-                onClick={(e) => handleEditLabel(e, label)}
-                className="w-7 h-7 flex items-center justify-center bg-white dark:bg-gray-800 rounded text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                title="Edit"
-              >
-                ✏️
-              </button>
-              <button
-                onClick={(e) => handleDeleteLabel(e, label.id)}
-                disabled={labels.length === 1}
-                className="w-7 h-7 flex items-center justify-center bg-white dark:bg-gray-800 rounded text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                title={labels.length === 1 ? "Cannot delete last label" : "Delete"}
-              >
-                x
-              </button>
             </div>
-          </button>
-        ))}
+          );
+        })}
 
         {labels.length === 0 && (
-          <div className="text-center py-10 px-5 text-gray-400 dark:text-gray-500">
+          <div className="text-center py-10 px-5 text-[#90a7cb]">
             <p className="mb-2">No labels yet</p>
             <p className="text-sm italic">Create a label to start</p>
           </div>
         )}
       </div>
-
-      {activeLabelId && (
-        <div className="px-5 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-          <div className="flex flex-col gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
-            <div className="flex items-center gap-2.5">
-              <div
-                className="w-5 h-5 rounded flex-shrink-0"
-                style={{
-                  backgroundColor: labels.find(l => l.id === activeLabelId)?.color
-                }}
-              />
-              <span>{labels.find(l => l.id === activeLabelId)?.name} active</span>
-            </div>
-            <span className="text-xs text-gray-500 dark:text-gray-400 italic">
-              Paint or unpaint hands
-            </span>
-          </div>
-        </div>
-      )}
-    </div>
+    </aside>
   );
-});
-
-export default LabelSidebar;
+}

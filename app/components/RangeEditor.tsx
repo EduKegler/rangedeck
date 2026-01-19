@@ -1,7 +1,9 @@
 'use client';
 
-import { memo, useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button, Input } from '@heroui/react';
+import { ArrowLeft, Pencil, Check, X } from 'lucide-react';
 import PokerGrid from './PokerGrid';
 import LabelSidebar from './LabelSidebar';
 import LabelModal from './LabelModal';
@@ -12,7 +14,7 @@ interface RangeEditorProps {
   rangeId: string;
 }
 
-const RangeEditor = memo(({ rangeId }: RangeEditorProps) => {
+export default function RangeEditor({ rangeId }: RangeEditorProps) {
   const router = useRouter();
   const {
     rangesState,
@@ -31,7 +33,6 @@ const RangeEditor = memo(({ rangeId }: RangeEditorProps) => {
   const rangeName = rangeData.customName || defaultName;
 
   const [activeLabelId, setActiveLabelId] = useState<string | null>(() => {
-    // Initialize with first label if available
     return rangeData.labels.length > 0 ? rangeData.labels[0].id : null;
   });
   const [paintMode, setPaintMode] = useState<'paint' | 'erase' | null>(null);
@@ -40,10 +41,8 @@ const RangeEditor = memo(({ rangeId }: RangeEditorProps) => {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(rangeName);
 
-  // Auto-select first label when labels change and no label is selected
   useEffect(() => {
     if (rangeData.labels.length > 0) {
-      // If no label is selected, or the selected label doesn't exist anymore, select the first one
       const selectedLabelExists = activeLabelId && rangeData.labels.some(l => l.id === activeLabelId);
       if (!activeLabelId || !selectedLabelExists) {
         setActiveLabelId(rangeData.labels[0].id);
@@ -51,49 +50,47 @@ const RangeEditor = memo(({ rangeId }: RangeEditorProps) => {
     }
   }, [rangeData.labels, activeLabelId]);
 
-  const handCounts = useMemo(() => {
-    const counts: { [labelId: string]: number } = {};
-    Object.values(rangeData.hands).forEach(labelId => {
-      counts[labelId] = (counts[labelId] || 0) + 1;
-    });
-    return counts;
-  }, [rangeData.hands]);
+  const handCounts: { [labelId: string]: number } = {};
+  Object.values(rangeData.hands).forEach(labelId => {
+    handCounts[labelId] = (handCounts[labelId] || 0) + 1;
+  });
 
-  const handleCreateLabel = useCallback(() => {
+  const totalHands = Object.keys(rangeData.hands).length;
+  const frequency = ((totalHands / 169) * 100).toFixed(1);
+
+  const handleCreateLabel = () => {
     setEditingLabel(undefined);
     setIsModalOpen(true);
-  }, []);
+  };
 
-  const handleEditLabel = useCallback((label: Label) => {
+  const handleEditLabel = (label: Label) => {
     setEditingLabel(label);
     setIsModalOpen(true);
-  }, []);
+  };
 
-  const handleSaveLabel = useCallback((name: string, color: string) => {
+  const handleSaveLabel = (name: string, color: string) => {
     if (editingLabel) {
       updateLabel(rangeId, editingLabel.id, name, color);
     } else {
       const newLabelId = createLabel(rangeId, name, color);
-      // Always select the newly created label
       setActiveLabelId(newLabelId);
     }
     setIsModalOpen(false);
     setEditingLabel(undefined);
-  }, [rangeId, editingLabel, createLabel, updateLabel]);
+  };
 
-  const handleDeleteLabel = useCallback((labelId: string) => {
+  const handleDeleteLabel = (labelId: string) => {
     deleteLabel(rangeId, labelId);
     if (activeLabelId === labelId) {
       setActiveLabelId(null);
     }
-  }, [rangeId, activeLabelId, deleteLabel]);
+  };
 
-  const handlePaintHand = useCallback((hand: string, isFirstClick: boolean) => {
+  const handlePaintHand = (hand: string, isFirstClick: boolean) => {
     if (activeLabelId) {
       const currentLabelId = rangeData.hands[hand];
 
       if (isFirstClick) {
-        // Determine mode based on first click
         if (currentLabelId === activeLabelId) {
           setPaintMode('erase');
           setHandLabel(rangeId, hand, null);
@@ -102,7 +99,6 @@ const RangeEditor = memo(({ rangeId }: RangeEditorProps) => {
           setHandLabel(rangeId, hand, activeLabelId);
         }
       } else {
-        // Apply the determined mode
         if (paintMode === 'erase') {
           setHandLabel(rangeId, hand, null);
         } else if (paintMode === 'paint') {
@@ -110,100 +106,104 @@ const RangeEditor = memo(({ rangeId }: RangeEditorProps) => {
         }
       }
     }
-  }, [rangeId, activeLabelId, rangeData.hands, setHandLabel, paintMode]);
+  };
 
-  const handleBack = useCallback(() => {
+  const handleBack = () => {
     router.push('/');
-  }, [router]);
+  };
 
-  const handleEditName = useCallback(() => {
+  const handleEditName = () => {
     setIsEditingName(true);
     setEditedName(rangeName);
-  }, [rangeName]);
+  };
 
-  const handleSaveName = useCallback(() => {
+  const handleSaveName = () => {
     if (editedName.trim()) {
       setRangeName(rangeId, editedName.trim());
       setIsEditingName(false);
     }
-  }, [rangeId, editedName, setRangeName]);
+  };
 
-  const handleCancelEditName = useCallback(() => {
+  const handleCancelEditName = () => {
     setIsEditingName(false);
     setEditedName(rangeName);
-  }, [rangeName]);
+  };
 
-  const handleMoveLabel = useCallback((labelId: string, direction: 'up' | 'down') => {
+  const handleMoveLabel = (labelId: string, direction: 'up' | 'down') => {
     reorderLabel(rangeId, labelId, direction);
-  }, [rangeId, reorderLabel]);
+  };
 
-  const handlePaintEnd = useCallback(() => {
+  const handlePaintEnd = () => {
     setPaintMode(null);
-  }, []);
+  };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-5 py-5 flex items-center justify-between gap-5">
-        <button
-          onClick={handleBack}
-          className="px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 hover:border-gray-400 dark:hover:border-gray-500 transition-colors flex items-center gap-1"
-        >
-          ← Back
-        </button>
-        {isEditingName ? (
-          <div className="flex-1 flex items-center justify-center gap-2">
-            <input
-              type="text"
-              value={editedName}
-              onChange={(e) => setEditedName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleSaveName();
-                if (e.key === 'Escape') handleCancelEditName();
-              }}
-              className="text-2xl font-bold text-gray-900 dark:text-gray-50 text-center bg-transparent border-b-2 border-blue-500 focus:outline-none px-2 max-lg:text-xl"
-              autoFocus
-            />
-            <button
-              onClick={handleSaveName}
-              className="px-3 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors"
-            >
-              ✓
-            </button>
-            <button
-              onClick={handleCancelEditName}
-              className="px-3 py-1.5 bg-gray-600 text-white rounded text-sm hover:bg-gray-700 transition-colors"
-            >
-              ✕
-            </button>
+    <div className="h-screen flex flex-col overflow-hidden bg-[#101722]">
+      <header className="h-16 shrink-0 border-b border-[#223149] flex items-center justify-between px-6 bg-[#162030]/50 backdrop-blur-sm z-10">
+        <div className="flex items-center gap-6">
+          <Button
+            variant="flat"
+            className="bg-[#223149] hover:bg-[#223149]/80 text-white gap-2 font-bold rounded-lg"
+            onPress={handleBack}
+          >
+            <ArrowLeft size={18} />
+            <span className="hidden sm:inline">Dashboard</span>
+          </Button>
+          
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 border-l border-[#223149] pl-6">
+            {isEditingName ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  value={editedName}
+                  onValueChange={setEditedName}
+                  variant="underlined"
+                  size="sm"
+                  classNames={{
+                    input: "text-lg font-bold",
+                    inputWrapper: "max-w-[200px]"
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveName();
+                    if (e.key === 'Escape') handleCancelEditName();
+                  }}
+                  autoFocus
+                />
+                <Button size="sm" color="primary" isIconOnly onPress={handleSaveName}>
+                  <Check size={16} />
+                </Button>
+                <Button size="sm" variant="flat" isIconOnly onPress={handleCancelEditName}>
+                  <X size={16} />
+                </Button>
+              </div>
+            ) : (
+              <button 
+                onClick={handleEditName}
+                className="flex items-center gap-2 group cursor-pointer"
+              >
+                <h1 className="text-white text-lg font-bold leading-tight tracking-tight hover:underline decoration-blue-500 underline-offset-4 decoration-2">
+                  {rangeName}
+                </h1>
+                <Pencil size={14} className="text-[#90a7cb]" />
+              </button>
+            )}
+            
+            <div className="flex items-center gap-1.5">
+              <div className="size-2 rounded-full bg-emerald-500 animate-pulse"></div>
+              <p className="text-[#90a7cb] text-xs font-medium">Auto-saved</p>
+            </div>
           </div>
-        ) : (
-          <div className="flex-1 flex items-center justify-center gap-2">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50 text-center max-lg:text-xl">
-              {rangeName}
-            </h1>
-            <button
-              onClick={handleEditName}
-              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-              title="Edit name"
-            >
-              ✏️
-            </button>
-          </div>
-        )}
-        <div className="w-[100px] max-lg:w-[80px]" />
-      </div>
-
-      <div className="flex-1 flex overflow-hidden max-md:flex-col">
-        <div className="flex-1 overflow-auto flex items-center justify-center">
-          <PokerGrid
-            labels={rangeData.labels}
-            hands={rangeData.hands}
-            activeLabelId={activeLabelId}
-            onPaintHand={handlePaintHand}
-            onPaintEnd={handlePaintEnd}
-          />
         </div>
 
+        <div className="flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-2 text-[#90a7cb] text-sm mr-4">
+            <span>Total Combos: <strong className="text-white font-mono-nums">{totalHands}</strong></span>
+            <span className="w-1 h-1 rounded-full bg-[#223149]"></span>
+            <span>Freq: <strong className="text-white font-mono-nums">{frequency}%</strong></span>
+          </div>
+        </div>
+      </header>
+
+      <div className="flex flex-1 overflow-hidden">
         <LabelSidebar
           labels={rangeData.labels}
           activeLabelId={activeLabelId}
@@ -214,6 +214,33 @@ const RangeEditor = memo(({ rangeId }: RangeEditorProps) => {
           onMoveLabel={handleMoveLabel}
           handCounts={handCounts}
         />
+
+        <main className="flex-1 bg-[#0b1019] flex flex-col items-center justify-center p-4 md:p-6">
+          <div className="w-full max-w-[560px] flex flex-col gap-3">
+            <PokerGrid
+              labels={rangeData.labels}
+              hands={rangeData.hands}
+              activeLabelId={activeLabelId}
+              onPaintHand={handlePaintHand}
+              onPaintEnd={handlePaintEnd}
+            />
+
+            {rangeData.labels.length > 0 && (
+              <div className="w-full flex flex-wrap items-center justify-center gap-4 text-sm bg-[#162030]/50 p-3 rounded-lg border border-[#223149]">
+                {rangeData.labels.filter(label => handCounts[label.id] > 0).map(label => (
+                  <div key={label.id} className="flex items-center gap-2">
+                    <span 
+                      className="w-3 h-3 rounded-full" 
+                      style={{ backgroundColor: label.color }}
+                    />
+                    <span className="text-white font-medium">{label.name}</span>
+                    <span className="text-[#90a7cb] text-xs font-mono-nums">({handCounts[label.id]})</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </main>
       </div>
 
       {isModalOpen && (
@@ -228,6 +255,4 @@ const RangeEditor = memo(({ rangeId }: RangeEditorProps) => {
       )}
     </div>
   );
-});
-
-export default RangeEditor;
+}

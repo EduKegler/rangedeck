@@ -1,16 +1,21 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
-import { RangesProvider } from "./context/RangesContext";
+import Providers from "./providers";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const GA_TRACKING_ID = "G-FPV25X5LSS";
+
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const APP_NAME = "Poker Range Builder";
@@ -65,7 +70,6 @@ export const metadata: Metadata = {
   category: "Games & Entertainment",
   classification: "Poker Strategy Tool",
 
-  // Open Graph
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -84,7 +88,6 @@ export const metadata: Metadata = {
     ],
   },
 
-  // Twitter Card
   twitter: {
     card: "summary_large_image",
     title: `${APP_NAME} - Professional Poker Range Chart Builder`,
@@ -93,7 +96,6 @@ export const metadata: Metadata = {
     creator: "@pokerrangebuilder",
   },
 
-  // Icons
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
@@ -105,10 +107,8 @@ export const metadata: Metadata = {
     shortcut: "/favicon.ico",
   },
 
-  // Manifest
   manifest: "/manifest.json",
 
-  // Robots
   robots: {
     index: true,
     follow: true,
@@ -122,19 +122,10 @@ export const metadata: Metadata = {
     },
   },
 
-  // Verification (adicione seus códigos quando tiver)
-  // verification: {
-  //   google: "seu-codigo-google",
-  //   yandex: "seu-codigo-yandex",
-  //   bing: "seu-codigo-bing",
-  // },
-
-  // Alternates
   alternates: {
     canonical: APP_URL,
   },
 
-  // App Links
   appLinks: {
     web: {
       url: APP_URL,
@@ -142,7 +133,6 @@ export const metadata: Metadata = {
     },
   },
 
-  // Other
   other: {
     "apple-mobile-web-app-capable": "yes",
     "apple-mobile-web-app-status-bar-style": "black-translucent",
@@ -165,7 +155,6 @@ export const viewport: Viewport = {
   colorScheme: "dark light",
 };
 
-// JSON-LD Structured Data
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
@@ -211,17 +200,29 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GA_TRACKING_ID}');
+          `}
+        </Script>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
       >
-        <RangesProvider>
+        <Providers>
           {children}
-        </RangesProvider>
+        </Providers>
       </body>
     </html>
   );

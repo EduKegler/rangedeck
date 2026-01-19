@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, memo } from 'react';
+import { createContext, useContext } from 'react';
 import type { ReactNode } from 'react';
 import useRanges from '../hooks/useRanges';
 
@@ -17,9 +17,12 @@ interface RangesContextType {
   createCategory: ReturnType<typeof useRanges>['createCategory'];
   updateCategory: ReturnType<typeof useRanges>['updateCategory'];
   reorderCategory: ReturnType<typeof useRanges>['reorderCategory'];
+  reorderCategoryByIndex: ReturnType<typeof useRanges>['reorderCategoryByIndex'];
   deleteCategory: ReturnType<typeof useRanges>['deleteCategory'];
   createRange: ReturnType<typeof useRanges>['createRange'];
   deleteRange: ReturnType<typeof useRanges>['deleteRange'];
+  reorderRange: ReturnType<typeof useRanges>['reorderRange'];
+  moveRangeToCategory: ReturnType<typeof useRanges>['moveRangeToCategory'];
   exportToJSON: ReturnType<typeof useRanges>['exportToJSON'];
   importFromJSON: ReturnType<typeof useRanges>['importFromJSON'];
   clearAllRanges: ReturnType<typeof useRanges>['clearAllRanges'];
@@ -39,7 +42,7 @@ interface RangesProviderProps {
   children: ReactNode;
 }
 
-export const RangesProvider = memo(({ children }: RangesProviderProps) => {
+export function RangesProvider({ children }: RangesProviderProps) {
   const rangesData = useRanges();
 
   return (
@@ -47,4 +50,4 @@ export const RangesProvider = memo(({ children }: RangesProviderProps) => {
       {children}
     </RangesContext.Provider>
   );
-});
+}

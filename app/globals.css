@@ -1,28 +1,41 @@
 @import "tailwindcss";
+@source '../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
+
+@custom-variant dark (&:is(.dark *));
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --surface: #f5f7f8;
+  --border: #e5e7eb;
+  --muted: #6b7280;
+  --grid-cell: #e5e7eb;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-grid-cell: var(--grid-cell);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.dark {
+  --background: #101722;
+  --foreground: #ffffff;
+  --surface: #162030;
+  --border: #223149;
+  --muted: #90a7cb;
+  --grid-cell: #343e4f;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Inter, system-ui, sans-serif;
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
@@ -36,4 +49,48 @@ button {
 button:focus-visible {
   outline: 2px solid rgb(59 130 246);
   outline-offset: 2px;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3b82f6;
+}
+
+/* Grid text styling - JetBrains Mono with tabular nums and slashed zero */
+.grid-text {
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-feature-settings: "tnum" 1, "zero" 1;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+/* Mono text for numbers (combos, odds, EV) */
+.font-mono-nums {
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
+  font-feature-settings: "tnum" 1, "zero" 1;
+}
+
+/* Label glow effect */
+.label-glow {
+  box-shadow: 0 0 8px currentColor;
+}
+
+/* Hide scrollbar */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

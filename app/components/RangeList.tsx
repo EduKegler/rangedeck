@@ -1,191 +1,387 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { GripVertical, Pencil, Trash2, Plus, PlusCircle, Upload, Download, Spade } from 'lucide-react';
 import RangeCard from './RangeCard';
 import CategoryModal from './CategoryModal';
 import RangeCreateModal from './RangeCreateModal';
 import { useRangesContext } from '../context/RangesContext';
 
-const RangeList = () => {
-  const { rangesState, exportToJSON, importFromJSON, createCategory, updateCategory, reorderCategory, deleteCategory, createRange, deleteRange } = useRangesContext();
+export default function RangeList() {
+  const { 
+    rangesState, 
+    exportToJSON, 
+    importFromJSON, 
+    createCategory, 
+    updateCategory, 
+    reorderCategoryByIndex, 
+    deleteCategory, 
+    createRange, 
+    deleteRange,
+    reorderRange,
+  } = useRangesContext();
   const router = useRouter();
   const [editingCategory, setEditingCategory] = useState<{ id: string; name: string } | null>(null);
   const [rangeModalState, setRangeModalState] = useState<{ categoryId: string; categoryName: string } | null>(null);
 
-  const categories = useMemo(() => rangesState.categories || [], [rangesState.categories]);
-  const rangeDefinitions = useMemo(() => rangesState.rangeDefinitions || [], [rangesState.rangeDefinitions]);
+  const [draggedCategoryIndex, setDraggedCategoryIndex] = useState<number | null>(null);
+  const [dragOverCategoryIndex, setDragOverCategoryIndex] = useState<number | null>(null);
+  const categoryDragCounter = useRef(0);
 
-  const rangesByCategory = useMemo(() => {
-    const grouped: { [categoryId: string]: typeof rangeDefinitions } = {};
-    categories.forEach(cat => {
-      grouped[cat.id] = rangeDefinitions.filter(r => r.categoryId === cat.id);
-    });
-    return grouped;
-  }, [categories, rangeDefinitions]);
+  const [draggedRangeId, setDraggedRangeId] = useState<string | null>(null);
+  const [dragOverRangeId, setDragOverRangeId] = useState<string | null>(null);
+  const rangeDragCounter = useRef(0);
 
-  const handleImport = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const categories = rangesState.categories || [];
+  const rangeDefinitions = rangesState.rangeDefinitions || [];
+
+  const rangesByCategory: { [categoryId: string]: typeof rangeDefinitions } = {};
+  categories.forEach(cat => {
+    rangesByCategory[cat.id] = rangeDefinitions.filter(r => r.categoryId === cat.id);
+  });
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       importFromJSON(file);
       e.target.value = '';
     }
-  }, [importFromJSON]);
+  };
 
-  const handleSelectRange = useCallback((rangeId: string) => {
+  const handleSelectRange = (rangeId: string) => {
     router.push(`/edit/${rangeId}`);
-  }, [router]);
+  };
 
-  const handleSaveCategory = useCallback((name: string) => {
+  const handleSaveCategory = (name: string) => {
     if (editingCategory?.id) {
       updateCategory(editingCategory.id, name);
     } else {
       createCategory(name);
     }
     setEditingCategory(null);
-  }, [editingCategory, createCategory, updateCategory]);
+  };
 
-  const handleDeleteCategory = useCallback((categoryId: string) => {
+  const handleDeleteCategory = (categoryId: string) => {
     if (confirm('Delete this category? It must be empty.')) {
       deleteCategory(categoryId);
     }
-  }, [deleteCategory]);
+  };
 
-  const handleCreateRange = useCallback((name: string, categoryId: string) => {
+  const handleCreateRange = (name: string, categoryId: string) => {
     const rangeId = createRange(name, categoryId);
     setRangeModalState(null);
     router.push(`/edit/${rangeId}`);
-  }, [createRange, router]);
+  };
 
-  const handleDeleteRange = useCallback((e: React.MouseEvent, rangeId: string) => {
+  const handleDeleteRange = (e: React.MouseEvent, rangeId: string) => {
     e.stopPropagation();
     if (confirm('Delete this range? This action cannot be undone.')) {
       deleteRange(rangeId);
     }
-  }, [deleteRange]);
+  };
 
-  const handleMoveCategory = useCallback((categoryId: string, direction: 'up' | 'down') => {
-    reorderCategory(categoryId, direction);
-  }, [reorderCategory]);
+  const handleCategoryDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedCategoryIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', `category:${index}`);
+  };
+
+  const handleCategoryDragEnd = () => {
+    setDraggedCategoryIndex(null);
+    setDragOverCategoryIndex(null);
+    categoryDragCounter.current = 0;
+  };
+
+  const handleCategoryDragEnter = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    const data = e.dataTransfer.types.includes('text/plain');
+    if (data) {
+      categoryDragCounter.current++;
+      if (index !== draggedCategoryIndex) {
+        setDragOverCategoryIndex(index);
+      }
+    }
+  };
+
+  const handleCategoryDragLeave = () => {
+    categoryDragCounter.current--;
+    if (categoryDragCounter.current === 0) {
+      setDragOverCategoryIndex(null);
+    }
+  };
+
+  const handleCategoryDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleCategoryDrop = (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    const data = e.dataTransfer.getData('text/plain');
+    
+    if (data.startsWith('category:')) {
+      const sourceIndex = parseInt(data.split(':')[1], 10);
+      if (sourceIndex !== targetIndex) {
+        reorderCategoryByIndex(sourceIndex, targetIndex);
+      }
+    }
+    
+    setDraggedCategoryIndex(null);
+    setDragOverCategoryIndex(null);
+    categoryDragCounter.current = 0;
+  };
+
+  // Range drag handlers
+  const handleRangeDragStart = (e: React.DragEvent, rangeId: string) => {
+    setDraggedRangeId(rangeId);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', `range:${rangeId}`);
+  };
+
+  const handleRangeDragEnd = () => {
+    setDraggedRangeId(null);
+    setDragOverRangeId(null);
+    rangeDragCounter.current = 0;
+  };
+
+  const handleRangeDragEnter = (e: React.DragEvent, rangeId: string) => {
+    e.preventDefault();
+    rangeDragCounter.current++;
+    if (rangeId !== draggedRangeId) {
+      setDragOverRangeId(rangeId);
+    }
+  };
+
+  const handleRangeDragLeave = () => {
+    rangeDragCounter.current--;
+    if (rangeDragCounter.current === 0) {
+      setDragOverRangeId(null);
+    }
+  };
+
+  const handleRangeDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleRangeDrop = (e: React.DragEvent, targetRangeId: string, categoryId: string) => {
+    e.preventDefault();
+    const data = e.dataTransfer.getData('text/plain');
+    
+    if (data.startsWith('range:')) {
+      const sourceRangeId = data.split(':')[1];
+      if (sourceRangeId !== targetRangeId) {
+        const targetIndex = rangeDefinitions.findIndex(r => r.id === targetRangeId);
+        if (targetIndex !== -1) {
+          reorderRange(sourceRangeId, targetIndex);
+        }
+      }
+    }
+    
+    setDraggedRangeId(null);
+    setDragOverRangeId(null);
+    rangeDragCounter.current = 0;
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-6 px-3">
-      <div className="max-w-full mx-auto mb-8 px-2">
-        <div className="flex justify-between items-center gap-5 flex-wrap">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-50">Poker Ranges</h1>
-          <div className="flex gap-3">
-            <button
-              onClick={() => setEditingCategory({ id: '', name: '' })}
-              className="px-5 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
-            >
-              + New Category
-            </button>
-            <label className="px-5 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-              Import JSON
-              <input
-                type="file"
-                accept=".json"
-                onChange={handleImport}
-                className="hidden"
-              />
-            </label>
-            <button
-              onClick={exportToJSON}
-              className="px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-            >
-              Export JSON
-            </button>
+    <div className="min-h-screen bg-[#111827] flex flex-col">
+      <header className="flex items-center justify-between border-b border-slate-800 bg-[#111827] px-6 py-4 z-20">
+        <div className="flex items-center gap-3">
+          <div className="size-8 rounded bg-[#3b82f6] flex items-center justify-center text-white">
+            <Spade size={20} />
           </div>
+          <h1 className="text-xl font-bold tracking-tight text-white">Poker Ranges</h1>
         </div>
-      </div>
+        <div className="flex items-center gap-3">
+          <label className="hidden md:flex items-center justify-center h-9 px-4 rounded border border-slate-700 hover:bg-slate-800 text-sm font-medium transition-colors cursor-pointer text-white">
+            <Upload size={16} className="mr-2" />
+            Import JSON
+            <input
+              type="file"
+              accept=".json"
+              onChange={handleImport}
+              className="hidden"
+            />
+          </label>
+          <button 
+            onClick={exportToJSON}
+            className="hidden md:flex items-center justify-center h-9 px-4 rounded border border-slate-700 hover:bg-slate-800 text-sm font-medium transition-colors text-white"
+          >
+            <Download size={16} className="mr-2" />
+            Export JSON
+          </button>
+          <button 
+            onClick={() => setEditingCategory({ id: '', name: '' })}
+            className="flex items-center justify-center h-9 px-4 rounded bg-[#3b82f6] hover:bg-blue-600 text-white text-sm font-bold shadow-sm transition-colors"
+          >
+            <Plus size={16} className="mr-2" />
+            New Category
+          </button>
+        </div>
+      </header>
 
-      <div className="max-w-full mx-auto flex flex-col gap-8 px-2">
-        {categories.map((category, index) => {
-          const hasRanges = (rangesByCategory[category.id]?.length || 0) > 0;
+      {/* Main Content */}
+      <main className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-4 md:px-4">
+        <div className="mx-auto flex flex-col gap-2 pb-6">
+          {categories.map((category, categoryIndex) => {
+            const categoryRanges = rangesByCategory[category.id] || [];
+            const hasRanges = categoryRanges.length > 0;
+            const isCategoryDragging = draggedCategoryIndex === categoryIndex;
+            const isCategoryDragOver = dragOverCategoryIndex === categoryIndex;
 
-          return (
-            <section key={category.id}>
-              <div className="flex items-center justify-between pb-2 mb-4 border-b-2 border-gray-200 dark:border-gray-700">
-                <div className="flex items-center gap-2">
-                  <div className="flex flex-col gap-0.5">
-                    <button
-                      onClick={() => handleMoveCategory(category.id, 'up')}
-                      disabled={index === 0}
-                      className="w-5 h-2.5 flex items-center justify-center bg-gray-700 dark:bg-gray-600 text-white rounded text-[10px] hover:bg-gray-600 dark:hover:bg-gray-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                      title="Move up"
+            return (
+              <section 
+                key={category.id} 
+                className={`flex flex-col gap-2 transition-all ${
+                  isCategoryDragging ? 'opacity-50' : ''
+                } ${isCategoryDragOver ? 'ring-2 ring-[#3b82f6] ring-offset-2 ring-offset-[#111827] rounded-lg' : ''}`}
+                onDragEnter={(e) => handleCategoryDragEnter(e, categoryIndex)}
+                onDragLeave={handleCategoryDragLeave}
+                onDragOver={handleCategoryDragOver}
+                onDrop={(e) => handleCategoryDrop(e, categoryIndex)}
+              >
+                {/* Category Header */}
+                <div className="flex items-center justify-between group p-2 rounded-lg hover:bg-white/5 transition-colors -ml-2">
+                  <div className="flex items-center gap-3">
+                    <button 
+                      draggable
+                      onDragStart={(e) => handleCategoryDragStart(e, categoryIndex)}
+                      onDragEnd={handleCategoryDragEnd}
+                      className="text-slate-600 hover:text-slate-400 cursor-grab active:cursor-grabbing"
+                      title="Drag to reorder category"
                     >
-                      ▲
+                      <GripVertical size={20} />
                     </button>
-                    <button
-                      onClick={() => handleMoveCategory(category.id, 'down')}
-                      disabled={index === categories.length - 1}
-                      className="w-5 h-2.5 flex items-center justify-center bg-gray-700 dark:bg-gray-600 text-white rounded text-[10px] hover:bg-gray-600 dark:hover:bg-gray-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                      title="Move down"
-                    >
-                      ▼
-                    </button>
+                    <h2 className="text-lg font-bold text-slate-100">{category.name}</h2>
+                    <div className="flex items-center gap-1">
+                      <button 
+                        onClick={() => setEditingCategory({ id: category.id, name: category.name })}
+                        className="size-7 flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+                        title="Rename category"
+                      >
+                        <Pencil size={16} />
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteCategory(category.id)}
+                        disabled={hasRanges}
+                        className={`size-7 flex items-center justify-center rounded transition-colors ${
+                          hasRanges 
+                            ? 'text-slate-700 cursor-not-allowed' 
+                            : 'text-slate-400 hover:text-red-500 hover:bg-slate-800'
+                        }`}
+                        title={hasRanges ? "Delete category (Remove ranges first)" : "Delete category"}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full bg-slate-800 text-xs font-medium text-slate-400 font-mono-nums">
+                      {categoryRanges.length} Ranges
+                    </span>
                   </div>
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-50">
-                    {category.name}
-                  </h2>
-                  <button
-                    onClick={() => setEditingCategory({ id: category.id, name: category.name })}
-                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-                    title="Edit category name"
-                  >
-                    ✏️
-                  </button>
-                </div>
-                <div className="flex gap-2">
-                  <button
+                  <button 
                     onClick={() => setRangeModalState({ categoryId: category.id, categoryName: category.name })}
-                    className="px-3 py-1.5 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 transition-colors"
+                    className="flex items-center gap-1 text-[#3b82f6] hover:text-blue-400 text-sm font-bold transition-colors"
                   >
-                    + Range
-                  </button>
-                  <button
-                    onClick={() => handleDeleteCategory(category.id)}
-                    disabled={hasRanges}
-                    className="px-3 py-1.5 bg-red-600 text-white rounded text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-red-600"
-                    title={hasRanges ? "Cannot delete category with ranges" : "Delete category"}
-                  >
-                    Delete Category
+                    <PlusCircle size={18} />
+                    Add Range
                   </button>
                 </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                {rangesByCategory[category.id]?.map(range => (
-                  <div key={range.id} className="relative group">
-                    <RangeCard
-                      name={range.name}
-                      rangeData={rangesState.ranges[range.id] || { labels: [], hands: {} }}
-                      onClick={() => handleSelectRange(range.id)}
-                    />
-                    <button
-                      onClick={(e) => handleDeleteRange(e, range.id)}
-                      className="absolute top-2 right-2 w-6 h-6 bg-red-600 text-white rounded-full text-xs font-bold opacity-0 group-hover:opacity-100 hover:bg-red-700 transition-all flex items-center justify-center"
-                      title="Delete range"
-                    >
-                      x
-                    </button>
+
+                {hasRanges ? (
+                  <div className="overflow-x-auto scrollbar-hide">
+                    <div className="flex gap-3  snap-x items-stretch">
+                      {categoryRanges.map(range => {
+                        const isRangeDragging = draggedRangeId === range.id;
+                        const isRangeDragOver = dragOverRangeId === range.id;
+                        
+                        return (
+                          <div
+                            key={range.id}
+                            draggable
+                            onDragStart={(e) => handleRangeDragStart(e, range.id)}
+                            onDragEnd={handleRangeDragEnd}
+                            onDragEnter={(e) => handleRangeDragEnter(e, range.id)}
+                            onDragLeave={handleRangeDragLeave}
+                            onDragOver={handleRangeDragOver}
+                            onDrop={(e) => handleRangeDrop(e, range.id, category.id)}
+                            className={`transition-all ${
+                              isRangeDragging ? 'opacity-50 scale-95' : ''
+                            } ${isRangeDragOver ? 'ring-2 ring-[#3b82f6] rounded-xl' : ''}`}
+                          >
+                            <RangeCard
+                              name={range.name}
+                              rangeData={rangesState.ranges[range.id] || { labels: [], hands: {} }}
+                              onClick={() => handleSelectRange(range.id)}
+                              onDelete={(e) => handleDeleteRange(e, range.id)}
+                            />
+                          </div>
+                        );
+                      })}
+                      {/* Add New Range Card */}
+                      <button
+                        onClick={() => setRangeModalState({ categoryId: category.id, categoryName: category.name })}
+                        className="flex-none snap-start w-80 min-h-[400px] flex flex-col items-center justify-center bg-transparent rounded-xl border-2 border-dashed border-slate-700 hover:border-[#3b82f6] hover:bg-slate-800/50 transition-all cursor-pointer group"
+                      >
+                        <div className="size-12 rounded-full bg-slate-800 flex items-center justify-center mb-3 group-hover:bg-[#3b82f6]/20 transition-colors">
+                          <Plus size={24} className="text-slate-400 group-hover:text-[#3b82f6]" />
+                        </div>
+                        <span className="text-sm font-semibold text-slate-400 group-hover:text-[#3b82f6]">Create New Range</span>
+                      </button>
+                      {/* Spacer to ensure right padding works with scroll */}
+                      <div className="flex-none w-px" aria-hidden="true" />
+                    </div>
                   </div>
-                ))}
-                {(!rangesByCategory[category.id] || rangesByCategory[category.id].length === 0) && (
-                  <div className="col-span-full text-center py-8 text-gray-400 dark:text-gray-500 text-sm italic">
-                    No ranges in this category. Click &quot;+ Range&quot; to create one.
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-10 bg-slate-900/30 rounded-xl border border-dashed border-slate-700">
+                    <div className="bg-slate-800 p-3 rounded-full mb-3">
+                      <Spade size={24} className="text-slate-500" />
+                    </div>
+                    <h3 className="text-sm font-semibold text-white mb-1">No ranges in this category</h3>
+                    <p className="text-xs text-slate-400 mb-4">Start by adding your first range</p>
+                    <button 
+                      onClick={() => setRangeModalState({ categoryId: category.id, categoryName: category.name })}
+                      className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded text-sm font-medium text-white transition-colors"
+                    >
+                      <Plus size={16} />
+                      Add Range
+                    </button>
                   </div>
                 )}
-              </div>
-            </section>
-          );
-        })}
 
-        {categories.length === 0 && (
-          <div className="text-center py-20 text-gray-400 dark:text-gray-500">
-            <p className="text-lg mb-2">No categories yet</p>
-            <p className="text-sm italic">Click &quot;+ New Category&quot; to get started</p>
-          </div>
-        )}
+                {/* Divider */}
+                <div className="h-px w-full bg-slate-800 mt-1" />
+              </section>
+            );
+          })}
+
+          {categories.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="bg-slate-800 p-4 rounded-full mb-4">
+                <Spade size={32} className="text-slate-500" />
+              </div>
+              <h2 className="text-xl font-bold text-white mb-2">No categories yet</h2>
+              <p className="text-slate-400 mb-6">Create your first category to start organizing your poker ranges</p>
+              <button 
+                onClick={() => setEditingCategory({ id: '', name: '' })}
+                className="flex items-center gap-2 px-6 py-3 bg-[#3b82f6] hover:bg-blue-600 rounded-lg text-white font-bold transition-colors"
+              >
+                <Plus size={20} />
+                New Category
+              </button>
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* Mobile FAB */}
+      <div className="fixed bottom-6 right-6 md:hidden">
+        <button 
+          onClick={() => setEditingCategory({ id: '', name: '' })}
+          className="size-14 bg-[#3b82f6] text-white rounded-full shadow-lg flex items-center justify-center"
+        >
+          <Plus size={24} />
+        </button>
       </div>
 
       {editingCategory !== null && (
@@ -206,6 +402,4 @@ const RangeList = () => {
       )}
     </div>
   );
-};
-
-export default RangeList;
+}

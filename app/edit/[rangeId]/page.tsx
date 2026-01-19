@@ -7,7 +7,6 @@ interface EditRangePageProps {
   }>;
 }
 
-// Default range names mapping
 const RANGE_NAMES: Record<string, { name: string; description: string; category: string }> = {
   'utg': { name: 'UTG (Under The Gun)', description: 'Opening range for the Under The Gun position - the tightest opening range', category: 'Opens' },
   'hj': { name: 'HJ (Hijack)', description: 'Opening range for the Hijack position - slightly wider than UTG', category: 'Opens' },
