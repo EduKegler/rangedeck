@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Input } from '@heroui/react';
-import { ArrowLeft, Pencil, Check, X } from 'lucide-react';
+import { ArrowLeft, Pencil, Check, X, Undo2, Redo2 } from 'lucide-react';
 import PokerGrid from './PokerGrid';
 import LabelSidebar from './LabelSidebar';
 import LabelModal from './LabelModal';
@@ -13,6 +13,8 @@ import type { Label } from '../types/range';
 interface RangeEditorProps {
   rangeId: string;
 }
+
+type HandsState = { [hand: string]: string };
 
 export default function RangeEditor({ rangeId }: RangeEditorProps) {
   const router = useRouter();
@@ -39,6 +41,138 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
   const [editingLabel, setEditingLabel] = useState<Label | undefined>(undefined);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(rangeName);
+
+  // Undo/Redo state - block-based (saves state per paint action, not per cell)
+  const [history, setHistory] = useState<HandsState[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const stateBeforePaintRef = useRef<HandsState | null>(null);
+  const isUndoRedoAction = useRef(false);
+  const hasInitialized = useRef(false);
+
+  // Initialize history with current state on mount
+  useEffect(() => {
+    if (hasHydrated && !hasInitialized.current) {
+      hasInitialized.current = true;
+      setHistory([{ ...rangeData.hands }]);
+      setHistoryIndex(0);
+    }
+  }, [hasHydrated, rangeData.hands]);
+
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
+
+  // Save state before starting a paint action
+  const saveStateBeforePaint = useCallback(() => {
+    if (!isUndoRedoAction.current) {
+      stateBeforePaintRef.current = { ...rangeData.hands };
+    }
+  }, [rangeData.hands]);
+
+  // Save state after finishing a paint action (called from handlePaintEnd)
+  const saveStateAfterPaint = useCallback(() => {
+    if (isUndoRedoAction.current) {
+      isUndoRedoAction.current = false;
+      return;
+    }
+
+    const stateBefore = stateBeforePaintRef.current;
+    const stateAfter = rangeData.hands;
+
+    // Only save if state actually changed
+    if (stateBefore && JSON.stringify(stateBefore) !== JSON.stringify(stateAfter)) {
+      setHistory(prev => {
+        // If we're not at the end of history, remove future states
+        const newHistory = prev.slice(0, historyIndex + 1);
+        newHistory.push({ ...stateAfter });
+        
+        // Limit history to 50 states
+        if (newHistory.length > 50) {
+          newHistory.shift();
+          return newHistory;
+        }
+        
+        return newHistory;
+      });
+      setHistoryIndex(prev => Math.min(prev + 1, 49));
+    }
+
+    stateBeforePaintRef.current = null;
+  }, [rangeData.hands, historyIndex]);
+
+  const handleUndo = useCallback(() => {
+    if (historyIndex > 0) {
+      isUndoRedoAction.current = true;
+      const newIndex = historyIndex - 1;
+      const previousState = history[newIndex];
+      
+      // Apply the previous state
+      const currentHands = rangeData.hands;
+      const handsToRemove = Object.keys(currentHands).filter(h => !previousState[h]);
+      const handsToAdd = Object.entries(previousState);
+      
+      // Remove hands that shouldn't exist
+      for (const hand of handsToRemove) {
+        setHandLabel(rangeId, hand, null);
+      }
+      
+      // Add/update hands
+      for (const [hand, labelId] of handsToAdd) {
+        if (currentHands[hand] !== labelId) {
+          setHandLabel(rangeId, hand, labelId);
+        }
+      }
+      
+      setHistoryIndex(newIndex);
+    }
+  }, [historyIndex, history, rangeData.hands, rangeId, setHandLabel]);
+
+  const handleRedo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+      isUndoRedoAction.current = true;
+      const newIndex = historyIndex + 1;
+      const nextState = history[newIndex];
+      
+      // Apply the next state
+      const currentHands = rangeData.hands;
+      const handsToRemove = Object.keys(currentHands).filter(h => !nextState[h]);
+      const handsToAdd = Object.entries(nextState);
+      
+      // Remove hands that shouldn't exist
+      for (const hand of handsToRemove) {
+        setHandLabel(rangeId, hand, null);
+      }
+      
+      // Add/update hands
+      for (const [hand, labelId] of handsToAdd) {
+        if (currentHands[hand] !== labelId) {
+          setHandLabel(rangeId, hand, labelId);
+        }
+      }
+      
+      setHistoryIndex(newIndex);
+    }
+  }, [historyIndex, history, rangeData.hands, rangeId, setHandLabel]);
+
+  // Keyboard shortcuts for undo/redo
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          handleRedo();
+        } else {
+          handleUndo();
+        }
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'y') {
+        e.preventDefault();
+        handleRedo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleUndo, handleRedo]);
 
   useEffect(() => {
     if (hasHydrated) {
@@ -91,11 +225,14 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
     }
   };
 
-  const handlePaintHand = (hand: string, isFirstClick: boolean) => {
+  const handlePaintHand = useCallback((hand: string, isFirstClick: boolean) => {
     if (activeLabelId) {
       const currentLabelId = rangeData.hands[hand];
 
       if (isFirstClick) {
+        // Save state before starting paint action
+        saveStateBeforePaint();
+        
         if (currentLabelId === activeLabelId) {
           setPaintMode('erase');
           setHandLabel(rangeId, hand, null);
@@ -111,7 +248,7 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
         }
       }
     }
-  };
+  }, [activeLabelId, rangeData.hands, saveStateBeforePaint, rangeId, setHandLabel, paintMode]);
 
   const handleBack = () => {
     router.push('/');
@@ -138,9 +275,13 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
     reorderLabel(rangeId, labelId, direction);
   };
 
-  const handlePaintEnd = () => {
+  const handlePaintEnd = useCallback(() => {
+    if (paintMode !== null) {
+      // Save state after finishing paint action
+      saveStateAfterPaint();
+    }
     setPaintMode(null);
-  };
+  }, [paintMode, saveStateAfterPaint]);
 
   if (!hasHydrated) {
     return (
@@ -230,10 +371,37 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="hidden md:flex items-center gap-2 text-[#90a7cb] text-sm mr-4">
+          <div className="hidden md:flex items-center gap-2 text-[#90a7cb] text-sm">
             <span>Total Combos: <strong className="text-white font-mono-nums">{totalHands}</strong></span>
             <span className="w-1 h-1 rounded-full bg-[#223149]"></span>
             <span>Freq: <strong className="text-white font-mono-nums">{frequency}%</strong></span>
+          </div>
+          
+          <div className="h-6 w-px bg-[#223149] hidden md:block" />
+          
+          <div className="flex items-center gap-1">
+            <Button
+              size="sm"
+              variant="flat"
+              isIconOnly
+              isDisabled={!canUndo}
+              onPress={handleUndo}
+              className="bg-[#223149] hover:bg-[#223149]/80 text-white disabled:opacity-30"
+              title="Undo (Ctrl+Z)"
+            >
+              <Undo2 size={16} />
+            </Button>
+            <Button
+              size="sm"
+              variant="flat"
+              isIconOnly
+              isDisabled={!canRedo}
+              onPress={handleRedo}
+              className="bg-[#223149] hover:bg-[#223149]/80 text-white disabled:opacity-30"
+              title="Redo (Ctrl+Shift+Z)"
+            >
+              <Redo2 size={16} />
+            </Button>
           </div>
         </div>
       </header>
@@ -260,20 +428,24 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
               onPaintEnd={handlePaintEnd}
             />
 
-            {rangeData.labels.length > 0 && (
+        
               <div className="w-full flex flex-wrap items-center justify-center gap-4 text-sm bg-[#162030]/50 p-3 rounded-lg border border-[#223149]">
-                {rangeData.labels.filter(label => handCounts[label.id] > 0).map(label => (
+                {rangeData.labels.map(label => (
                   <div key={label.id} className="flex items-center gap-2">
                     <span 
                       className="w-3 h-3 rounded-full" 
                       style={{ backgroundColor: label.color }}
                     />
                     <span className="text-white font-medium">{label.name}</span>
-                    <span className="text-[#90a7cb] text-xs font-mono-nums">({handCounts[label.id]})</span>
+                    <span className="text-[#90a7cb] text-xs font-mono-nums">({handCounts[label.id] ?? 0})</span>
                   </div>
                 ))}
               </div>
-            )}
+     
+
+            <p className="w-full text-center text-xs text-[#90a7cb]">
+              Click to paint, click same label to erase, drag for multiple cells
+            </p>
           </div>
         </main>
       </div>
