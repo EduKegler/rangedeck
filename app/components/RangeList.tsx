@@ -528,7 +528,7 @@ export default function RangeList() {
                       dragOverCategoryForRange === category.id ? 'bg-[#3b82f6]/20' : 'bg-slate-800'
                     }`}>
                       <Spade size={24} className={`transition-colors ${
-                        dragOverCategoryForRange === category.id ? 'text-[#3b82f6]' : 'text-slate-500'
+                        dragOverCategoryForRange === category.id ? 'text-[#3b82f6]' : 'text-slate-400'
                       }`} />
                     </div>
                     <h3 className={`text-sm font-semibold mb-1 transition-colors ${
@@ -565,7 +565,7 @@ export default function RangeList() {
         {categories.length === 0 && (
             <div className="flex flex-col items-center justify-center py-20">
               <div className="bg-slate-800 p-4 rounded-full mb-4">
-                <Spade size={32} className="text-slate-500" />
+                <Spade size={32} className="text-slate-400" />
               </div>
               <h2 className="text-xl font-bold text-white mb-2">No categories yet</h2>
               <p className="text-slate-400 mb-6">Create your first category to start organizing your poker ranges</p>

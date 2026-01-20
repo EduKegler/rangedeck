@@ -85,7 +85,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               <div className="flex items-center justify-between p-4 bg-[#111822] rounded-lg border border-slate-700/50">
                 <div className="flex flex-col gap-1">
                   <span className="text-white text-sm font-medium">Card Size</span>
-                  <span className="text-slate-500 text-xs">Size of range cards on dashboard</span>
+                  <span className="text-slate-400 text-xs">Size of range cards on dashboard</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <button
@@ -111,7 +111,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               <div className="flex items-center justify-between p-4 bg-[#111822] rounded-lg border border-slate-700/50">
                 <div className="flex flex-col gap-1">
                   <span className="text-white text-sm font-medium">Grid Text Size</span>
-                  <span className="text-slate-500 text-xs">Hand names size in range cards</span>
+                  <span className="text-slate-400 text-xs">Hand names size in range cards</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <button

@@ -42,7 +42,7 @@ export default function RangeCard({ name, rangeData, onClick, onDelete }: RangeC
         {onDelete && (
           <button 
             onClick={(e) => { e.stopPropagation(); onDelete(e); }}
-            className="size-6 flex items-center justify-center rounded text-slate-500 hover:text-red-500 transition-colors shrink-0"
+            className="size-6 flex items-center justify-center rounded text-slate-400 hover:text-red-500 transition-colors shrink-0"
             title="Delete Range"
           >
             <Trash2 size={16} />
@@ -69,7 +69,7 @@ export default function RangeCard({ name, rangeData, onClick, onDelete }: RangeC
                 <span className="text-[10px] font-medium text-slate-300 truncate max-w-[60px]">
                   {label.name}
                 </span>
-                <span className="text-[10px] font-mono-nums text-slate-500">
+                <span className="text-[10px] font-mono-nums text-slate-400">
                   {percentage.toFixed(0)}%
                 </span>
               </div>
@@ -85,7 +85,7 @@ export default function RangeCard({ name, rangeData, onClick, onDelete }: RangeC
               <span className="text-[10px] font-medium text-slate-300 truncate max-w-[60px]">
                 {defaultLabel.name}
               </span>
-              <span className="text-[10px] font-mono-nums text-slate-500">
+              <span className="text-[10px] font-mono-nums text-slate-400">
                 0%
               </span>
             </div>
