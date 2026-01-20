@@ -51,7 +51,7 @@ export default function LabelModal({ label, onSave, onClose }: LabelModalProps) 
   };
 
   const handleChange = (value: string) => {
-    setName(value);
+    setName(value.slice(0, 20));
     if (error) setError('');
   };
 
@@ -85,6 +85,7 @@ export default function LabelModal({ label, onSave, onClose }: LabelModalProps) 
                 value={name}
                 onChange={(e) => handleChange(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+                maxLength={20}
                 className={`w-full bg-[#111822] border rounded-lg h-12 px-4 text-white placeholder:text-slate-500 focus:outline-none transition-all text-sm ${
                   error 
                     ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500' 

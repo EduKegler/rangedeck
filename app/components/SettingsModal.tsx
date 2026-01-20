@@ -11,6 +11,17 @@ const CARD_SIZE_OPTIONS = [
   { value: 480, label: 'Extra Large' },
 ];
 
+const FONT_SIZE_OPTIONS = [
+  { value: 0, label: 'None' },
+  { value: 10, label: '10px' },
+  { value: 11, label: '11px' },
+  { value: 12, label: '12px' },
+  { value: 13, label: '13px' },
+  { value: 14, label: '14px' },
+  { value: 15, label: '15px' },
+  { value: 16, label: '16px' },
+];
+
 interface SettingsModalProps {
   onClose: () => void;
 }
@@ -29,9 +40,16 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
   }, [gridFontSize, cardSize]);
 
   const handleFontSizeChange = (delta: number) => {
-    const newSize = Math.max(6, Math.min(16, localSettings.gridFontSize + delta));
-    setLocalSettings(prev => ({ ...prev, gridFontSize: newSize }));
+    const currentIndex = FONT_SIZE_OPTIONS.findIndex(opt => opt.value === localSettings.gridFontSize);
+    const newIndex = Math.max(0, Math.min(FONT_SIZE_OPTIONS.length - 1, currentIndex + delta));
+    setLocalSettings(prev => ({ ...prev, gridFontSize: FONT_SIZE_OPTIONS[newIndex].value }));
   };
+
+  const getCurrentFontSizeLabel = () => {
+    return FONT_SIZE_OPTIONS.find(opt => opt.value === localSettings.gridFontSize)?.label || '10px';
+  };
+
+  const currentFontSizeIndex = FONT_SIZE_OPTIONS.findIndex(opt => opt.value === localSettings.gridFontSize);
 
   const handleCardSizeChange = (delta: number) => {
     const currentIndex = CARD_SIZE_OPTIONS.findIndex(opt => opt.value === localSettings.cardSize);
@@ -116,17 +134,17 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => handleFontSizeChange(-1)}
-                    disabled={localSettings.gridFontSize <= 6}
+                    disabled={currentFontSizeIndex <= 0}
                     className="size-8 flex items-center justify-center rounded-lg bg-slate-700 hover:bg-slate-600 text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     <Minus size={16} />
                   </button>
-                  <span className="text-white font-mono-nums text-sm w-12 text-center">
-                    {localSettings.gridFontSize}px
+                  <span className="text-white font-medium text-sm w-12 text-center">
+                    {getCurrentFontSizeLabel()}
                   </span>
                   <button
                     onClick={() => handleFontSizeChange(1)}
-                    disabled={localSettings.gridFontSize >= 16}
+                    disabled={currentFontSizeIndex >= FONT_SIZE_OPTIONS.length - 1}
                     className="size-8 flex items-center justify-center rounded-lg bg-slate-700 hover:bg-slate-600 text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     <Plus size={16} />
@@ -151,10 +169,12 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                         className="aspect-square flex items-center justify-center rounded-sm"
                         style={{ 
                           backgroundColor: [0,1,2,5,6,7,10,12,15,20,24].includes(i) ? '#ef4444' : '#334155',
-                          fontSize: `${Math.max(6, localSettings.gridFontSize * 0.6)}px`
+                          fontSize: localSettings.gridFontSize === 0 ? 0 : `${localSettings.gridFontSize * 0.6}px`
                         }}
                       >
-                        <span className="font-bold text-white drop-shadow-sm">{hand}</span>
+                        {localSettings.gridFontSize > 0 && (
+                          <span className="font-bold text-white drop-shadow-sm">{hand}</span>
+                        )}
                       </div>
                     ))}
                   </div>

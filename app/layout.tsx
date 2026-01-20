@@ -295,6 +295,7 @@ export default async function RootLayout({
       } as React.CSSProperties}
     >
       <head>
+       <meta name="google" content="notranslate" />
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`}
           strategy="afterInteractive"

@@ -129,10 +129,15 @@ export default function LabelSidebar({
         <div className="p-4 border-b border-[#223149]">
           <button
             onClick={onCreateLabel}
-            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg h-11 bg-[#3b82f6] hover:bg-blue-600 transition-colors text-white text-sm font-bold tracking-wide shadow-lg shadow-blue-900/30"
+            disabled={labels.length >= 6}
+            className={`flex w-full items-center justify-center gap-2 rounded-lg h-11 transition-colors text-white text-sm font-bold tracking-wide shadow-lg ${
+              labels.length >= 6 
+                ? 'bg-slate-700 cursor-not-allowed opacity-50' 
+                : 'bg-[#3b82f6] hover:bg-blue-600 cursor-pointer shadow-blue-900/30'
+            }`}
           >
             <Plus size={18} strokeWidth={2.5} />
-            New Label
+            {labels.length >= 6 ? 'Max 6 Labels' : 'New Label'}
           </button>
         </div>
 

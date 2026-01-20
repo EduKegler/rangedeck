@@ -63,6 +63,7 @@ export default function RangeList() {
   const deleteRange = useRangesStore((state) => state.deleteRange);
   const reorderRange = useRangesStore((state) => state.reorderRange);
   const moveRangeToCategory = useRangesStore((state) => state.moveRangeToCategory);
+  const setRangeName = useRangesStore((state) => state.setRangeName);
 
   const showToast = useToastStore((state) => state.showToast);
 
@@ -477,6 +478,7 @@ export default function RangeList() {
                               rangeData={ranges[range.id] || { labels: [], hands: {} }}
                       onClick={() => handleSelectRange(range.id)}
                               onDelete={(e) => handleDeleteRangeClick(e, range.id)}
+                              onRename={(newName) => setRangeName(range.id, newName)}
                             />
                           </div>
                         );
@@ -505,7 +507,7 @@ export default function RangeList() {
                             <div className="size-12 rounded-full bg-slate-800 flex items-center justify-center mb-3 group-hover:bg-[#3b82f6]/20 transition-colors">
                               <Plus size={24} className="text-slate-400 group-hover:text-[#3b82f6]" />
                             </div>
-                            <span className="text-sm font-semibold text-slate-400 group-hover:text-[#3b82f6]">Create New Range</span>
+                            <span className="text-sm font-semibold text-slate-400 group-hover:text-[#3b82f6]">Add Range</span>
                           </>
                         )}
                       </div>

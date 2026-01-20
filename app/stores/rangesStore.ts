@@ -95,6 +95,13 @@ export const useRangesStore = create<RangesStore>()(
       },
 
       createLabel: (rangeId: string, name: string, color: string) => {
+        const state = get();
+        const rangeData = state.ranges[rangeId];
+        
+        if (rangeData && rangeData.labels.length >= 6) {
+          return '';
+        }
+        
         const labelId = generateLabelId();
         set((state) => {
           const newRanges = { ...state.ranges };

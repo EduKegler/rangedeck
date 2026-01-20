@@ -33,7 +33,7 @@ export const useSettingsStore = create<SettingsStore>()(
     (set) => ({
       ...DEFAULT_SETTINGS,
       
-      setGridFontSize: (size) => set({ gridFontSize: Math.max(6, Math.min(16, size)) }),
+      setGridFontSize: (size) => set({ gridFontSize: size === 0 ? 0 : Math.max(10, Math.min(16, size)) }),
       
       setCardSize: (size) => set({ cardSize: size }),
       
