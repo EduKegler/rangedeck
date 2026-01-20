@@ -94,3 +94,25 @@ button:focus-visible {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Settings-based sizes with smooth transitions */
+:root {
+  --settings-card-size: 400px;
+  --settings-grid-font-size: 10px;
+}
+
+.range-card {
+  width: var(--settings-card-size);
+  transition: width 200ms ease-out;
+}
+
+.range-card-placeholder {
+  width: var(--settings-card-size);
+  min-height: var(--settings-card-size);
+  transition: width 200ms ease-out, min-height 200ms ease-out;
+}
+
+.grid-hand-text {
+  font-size: var(--settings-grid-font-size);
+  transition: font-size 200ms ease-out;
+}

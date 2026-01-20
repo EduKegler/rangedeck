@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { Plus, GripVertical, Pencil, Trash2 } from 'lucide-react';
-import { useToast } from './Toast';
+import { useToastStore } from '../stores/toastStore';
 import ConfirmModal from './ConfirmModal';
 import type { Label } from '../types/range';
 
@@ -31,7 +31,7 @@ export default function LabelSidebar({
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [deletingLabel, setDeletingLabel] = useState<Label | null>(null);
   const dragCounter = useRef(0);
-  const { showToast } = useToast();
+  const showToast = useToastStore((state) => state.showToast);
 
   const totalHands = Object.values(handCounts).reduce((sum, count) => sum + count, 0);
 
@@ -192,21 +192,15 @@ export default function LabelSidebar({
                     </span>
                   </div>
                   
-                  {count > 0 && (
-                    <div className="w-full bg-gray-700 h-1 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full rounded-full transition-all duration-300"
-                        style={{ 
-                          backgroundColor: label.color,
-                          width: `${percentage}%`
-                        }}
-                      />
-                    </div>
-                  )}
-                  
-                  {count === 0 && (
-                    <p className="text-[10px] text-[#90a7cb]">No hands</p>
-                  )}
+                  <div className="w-full bg-gray-700 h-1 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full rounded-full transition-all duration-300"
+                      style={{ 
+                        backgroundColor: label.color,
+                        width: `${percentage}%`
+                      }}
+                    />
+                  </div>
                 </div>
 
                 <div className="h-6 w-px bg-[#223149] mx-1" />

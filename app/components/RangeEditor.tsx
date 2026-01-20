@@ -7,7 +7,7 @@ import { ArrowLeft, Pencil, Check, X } from 'lucide-react';
 import PokerGrid from './PokerGrid';
 import LabelSidebar from './LabelSidebar';
 import LabelModal from './LabelModal';
-import { useRangesContext } from '../context/RangesContext';
+import { useRangesStore } from '../stores/rangesStore';
 import type { Label } from '../types/range';
 
 interface RangeEditorProps {
@@ -16,30 +16,35 @@ interface RangeEditorProps {
 
 export default function RangeEditor({ rangeId }: RangeEditorProps) {
   const router = useRouter();
-  const {
-    rangesState,
-    getRangeData,
-    createLabel,
-    updateLabel,
-    deleteLabel,
-    setHandLabel,
-    setRangeName,
-    reorderLabel,
-  } = useRangesContext();
+  
+  const hasHydrated = useRangesStore((state) => state._hasHydrated);
+  const ranges = useRangesStore((state) => state.ranges);
+  const rangeDefinitions = useRangesStore((state) => state.rangeDefinitions);
+  const ensureRangeHasLabel = useRangesStore((state) => state.ensureRangeHasLabel);
+  const createLabel = useRangesStore((state) => state.createLabel);
+  const updateLabel = useRangesStore((state) => state.updateLabel);
+  const deleteLabel = useRangesStore((state) => state.deleteLabel);
+  const setHandLabel = useRangesStore((state) => state.setHandLabel);
+  const setRangeName = useRangesStore((state) => state.setRangeName);
+  const reorderLabel = useRangesStore((state) => state.reorderLabel);
 
-  const rangeData = getRangeData(rangeId);
-  const rangeDef = (rangesState.rangeDefinitions || []).find(r => r.id === rangeId);
+  const rangeData = ranges[rangeId] || { labels: [], hands: {}, customName: undefined };
+  const rangeDef = (rangeDefinitions || []).find(r => r.id === rangeId);
   const defaultName = rangeDef?.name || rangeId;
   const rangeName = rangeData.customName || defaultName;
 
-  const [activeLabelId, setActiveLabelId] = useState<string | null>(() => {
-    return rangeData.labels.length > 0 ? rangeData.labels[0].id : null;
-  });
+  const [activeLabelId, setActiveLabelId] = useState<string | null>(null);
   const [paintMode, setPaintMode] = useState<'paint' | 'erase' | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLabel, setEditingLabel] = useState<Label | undefined>(undefined);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(rangeName);
+
+  useEffect(() => {
+    if (hasHydrated) {
+      ensureRangeHasLabel(rangeId);
+    }
+  }, [hasHydrated, rangeId, ensureRangeHasLabel]);
 
   useEffect(() => {
     if (rangeData.labels.length > 0) {
@@ -136,6 +141,36 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
   const handlePaintEnd = () => {
     setPaintMode(null);
   };
+
+  if (!hasHydrated) {
+    return (
+      <div className="h-screen flex flex-col overflow-hidden bg-[#101722]">
+        <header className="h-16 shrink-0 border-b border-[#223149] flex items-center justify-between px-6 bg-[#162030]/50">
+          <div className="flex items-center gap-6">
+            <div className="w-24 h-9 bg-[#223149] rounded-lg animate-pulse"></div>
+            <div className="border-l border-[#223149] pl-6">
+              <div className="w-40 h-6 bg-[#223149] rounded animate-pulse"></div>
+            </div>
+          </div>
+        </header>
+        <div className="flex flex-1 overflow-hidden">
+          <aside className="w-72 border-r border-[#223149] bg-[#162030]/30 p-4 flex flex-col gap-4">
+            <div className="h-10 bg-[#223149] rounded-lg animate-pulse"></div>
+            <div className="flex-1 flex flex-col gap-2">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-14 bg-[#223149] rounded-lg animate-pulse"></div>
+              ))}
+            </div>
+          </aside>
+          <main className="flex-1 bg-[#0b1019] flex flex-col items-center justify-center p-6">
+            <div className="w-full max-w-[560px]">
+              <div className="aspect-square w-full bg-[#162030] rounded-lg animate-pulse"></div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-[#101722]">

@@ -1,8 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import { cookies } from "next/headers";
 import Script from "next/script";
 import "./globals.css";
 import Providers from "./providers";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { parseSettingsCookie, SETTINGS_COOKIE_NAME } from "./lib/settings";
 
 const GA_TRACKING_ID = "G-FPV25X5LSS";
 
@@ -273,13 +276,24 @@ const faqJsonLd = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const settingsCookie = cookieStore.get(SETTINGS_COOKIE_NAME)?.value;
+  const settings = parseSettingsCookie(settingsCookie);
+
   return (
-    <html lang="en" className="dark">
+    <html 
+      lang="en" 
+      className="dark"
+      style={{
+        '--settings-card-size': `${settings.cardSize}px`,
+        '--settings-grid-font-size': `${settings.gridFontSize}px`,
+      } as React.CSSProperties}
+    >
       <head>
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`}
@@ -308,6 +322,7 @@ export default function RootLayout({
         <Providers>
           {children}
         </Providers>
+        <SpeedInsights />
       </body>
     </html>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import { Trash2, GripHorizontal } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import type { RangeData } from '../types/range';
 import PokerGridPreview from './PokerGridPreview';
 
@@ -29,10 +29,12 @@ export default function RangeCard({ name, rangeData, onClick, onDelete }: RangeC
     }))
     .filter(item => item.count > 0);
 
+  const defaultLabel = rangeData.labels[0];
+
   return (
     <div 
       onClick={onClick}
-      className="flex-none snap-start w-[400px] gap-2 bg-[#1f2937] rounded-xl border border-slate-700 p-4 shadow-sm hover:border-[#3b82f6]/50 hover:shadow-md transition-all group/card relative flex flex-col cursor-pointer"
+      className="range-card flex-none snap-start gap-2 bg-[#1f2937] rounded-xl border border-slate-700 p-4 shadow-sm hover:border-[#3b82f6]/50 hover:shadow-md group/card relative flex flex-col cursor-pointer"
     >
       <div className="flex items-center gap-2">
         <h3 className="font-bold text-white truncate flex-1">{displayName}</h3>
@@ -72,13 +74,22 @@ export default function RangeCard({ name, rangeData, onClick, onDelete }: RangeC
                 </span>
               </div>
             ))
-          ) : (
-            <span className="text-xs text-slate-500 italic">No labels assigned</span>
-          )}
-        </div>
-
-        <div className="flex items-center justify-center pt-2 border-t border-slate-700/50 cursor-grab active:cursor-grabbing group/handle">
-          <GripHorizontal size={20} className="text-slate-600 group-hover/handle:text-[#3b82f6] transition-colors" />
+          ) : defaultLabel ? (
+            <div 
+              className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-800/80 border border-slate-700/50"
+            >
+              <div 
+                className="size-2.5 rounded-full shrink-0"
+                style={{ backgroundColor: defaultLabel.color }}
+              />
+              <span className="text-[10px] font-medium text-slate-300 truncate max-w-[60px]">
+                {defaultLabel.name}
+              </span>
+              <span className="text-[10px] font-mono-nums text-slate-500">
+                0%
+              </span>
+            </div>
+          ) : null}
         </div>
       </div>
     </div>

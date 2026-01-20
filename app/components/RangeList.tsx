@@ -2,27 +2,70 @@
 
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { GripVertical, Pencil, Trash2, Plus, PlusCircle, Upload, Download, Spade } from 'lucide-react';
+import Image from 'next/image';
+import { GripVertical, Pencil, Trash2, Plus, PlusCircle, Upload, Download, Spade, Settings } from 'lucide-react';
 import RangeCard from './RangeCard';
 import CategoryModal from './CategoryModal';
 import RangeCreateModal from './RangeCreateModal';
 import ConfirmModal from './ConfirmModal';
-import { useRangesContext } from '../context/RangesContext';
-import { useToast } from './Toast';
+import SettingsModal from './SettingsModal';
+import { useRangesStore } from '../stores/rangesStore';
+import { useToastStore } from '../stores/toastStore';
+
+function SkeletonCard() {
+  return (
+    <div className="flex-none snap-start bg-[#1f2937] rounded-xl border border-slate-700 p-4 shadow-sm flex flex-col animate-pulse"
+      style={{ width: 'var(--settings-card-size, 400px)', minHeight: '320px' }}>
+      <div className="flex justify-between items-center mb-3">
+        <div className="h-5 bg-slate-700 rounded w-24"></div>
+        <div className="h-4 bg-slate-700 rounded w-12"></div>
+      </div>
+      <div className="aspect-square w-full bg-slate-800 rounded mb-3"></div>
+      <div className="mt-auto flex flex-col gap-2">
+        <div className="h-3 bg-slate-700 rounded w-full"></div>
+        <div className="h-6 bg-slate-700 rounded w-full"></div>
+      </div>
+    </div>
+  );
+}
+
+function SkeletonCategory() {
+  return (
+    <section className="flex flex-col gap-2 animate-pulse">
+      <div className="flex items-center justify-between p-2 -ml-2">
+        <div className="flex items-center gap-3">
+          <div className="h-6 bg-slate-700 rounded w-32"></div>
+          <div className="h-5 bg-slate-800 rounded-full w-16"></div>
+        </div>
+      </div>
+      <div className="flex overflow-x-auto gap-4 pb-4 -mx-2 px-2 scrollbar-hide snap-x items-stretch">
+        <SkeletonCard />
+        <SkeletonCard />
+        <SkeletonCard />
+      </div>
+    </section>
+  );
+}
 
 export default function RangeList() {
-  const { 
-    rangesState, 
-    exportToJSON, 
-    importFromJSON, 
-    createCategory, 
-    updateCategory, 
-    reorderCategoryByIndex, 
-    deleteCategory, 
-    createRange, 
-    deleteRange,
-    reorderRange,
-  } = useRangesContext();
+  const hasHydrated = useRangesStore((state) => state._hasHydrated);
+  
+  const ranges = useRangesStore((state) => state.ranges);
+  const categories = useRangesStore((state) => state.categories) || [];
+  const rangeDefinitions = useRangesStore((state) => state.rangeDefinitions) || [];
+  const exportToJSON = useRangesStore((state) => state.exportToJSON);
+  const importFromJSON = useRangesStore((state) => state.importFromJSON);
+  const createCategory = useRangesStore((state) => state.createCategory);
+  const updateCategory = useRangesStore((state) => state.updateCategory);
+  const reorderCategoryByIndex = useRangesStore((state) => state.reorderCategoryByIndex);
+  const deleteCategory = useRangesStore((state) => state.deleteCategory);
+  const createRange = useRangesStore((state) => state.createRange);
+  const deleteRange = useRangesStore((state) => state.deleteRange);
+  const reorderRange = useRangesStore((state) => state.reorderRange);
+  const moveRangeToCategory = useRangesStore((state) => state.moveRangeToCategory);
+
+  const showToast = useToastStore((state) => state.showToast);
+
   const router = useRouter();
   const [editingCategory, setEditingCategory] = useState<{ id: string; name: string } | null>(null);
   const [rangeModalState, setRangeModalState] = useState<{ categoryId: string; categoryName: string } | null>(null);
@@ -35,16 +78,16 @@ export default function RangeList() {
 
   const [draggedRangeId, setDraggedRangeId] = useState<string | null>(null);
   const [dragOverRangeId, setDragOverRangeId] = useState<string | null>(null);
+  const [dragOverCategoryForRange, setDragOverCategoryForRange] = useState<string | null>(null);
   const rangeDragCounter = useRef(0);
+  const categoryDropCounter = useRef(0);
 
-  const { showToast } = useToast();
-  const categories = rangesState.categories || [];
-  const rangeDefinitions = rangesState.rangeDefinitions || [];
+  const [showSettings, setShowSettings] = useState(false);
 
   const rangesByCategory: { [categoryId: string]: typeof rangeDefinitions } = {};
-  categories.forEach(cat => {
+    categories.forEach(cat => {
     rangesByCategory[cat.id] = rangeDefinitions.filter(r => r.categoryId === cat.id);
-  });
+    });
 
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -179,7 +222,9 @@ export default function RangeList() {
   const handleRangeDragEnd = () => {
     setDraggedRangeId(null);
     setDragOverRangeId(null);
+    setDragOverCategoryForRange(null);
     rangeDragCounter.current = 0;
+    categoryDropCounter.current = 0;
   };
 
   const handleRangeDragEnter = (e: React.DragEvent, rangeId: string) => {
@@ -202,58 +247,141 @@ export default function RangeList() {
     e.dataTransfer.dropEffect = 'move';
   };
 
-  const handleRangeDrop = (e: React.DragEvent, targetRangeId: string) => {
+  const handleRangeDrop = (e: React.DragEvent, targetRangeId: string, targetCategoryId: string) => {
     e.preventDefault();
+    e.stopPropagation();
     const data = e.dataTransfer.getData('text/plain');
     
     if (data.startsWith('range:')) {
       const sourceRangeId = data.split(':')[1];
+      const sourceRange = rangeDefinitions.find(r => r.id === sourceRangeId);
+      
       if (sourceRangeId !== targetRangeId) {
-        const targetIndex = rangeDefinitions.findIndex(r => r.id === targetRangeId);
-        if (targetIndex !== -1) {
-          reorderRange(sourceRangeId, targetIndex);
+        if (sourceRange && sourceRange.categoryId !== targetCategoryId) {
+          moveRangeToCategory(sourceRangeId, targetCategoryId);
+          const rangeName = sourceRange.name;
+          const categoryName = categories.find(c => c.id === targetCategoryId)?.name;
+          showToast(`Moved "${rangeName}" to "${categoryName}"`, 'success');
+        } else {
+          const targetIndex = rangeDefinitions.findIndex(r => r.id === targetRangeId);
+          if (targetIndex !== -1) {
+            reorderRange(sourceRangeId, targetIndex);
+          }
         }
       }
     }
     
     setDraggedRangeId(null);
     setDragOverRangeId(null);
+    setDragOverCategoryForRange(null);
     rangeDragCounter.current = 0;
+    categoryDropCounter.current = 0;
   };
+
+  const handleCategoryDropZoneEnter = (e: React.DragEvent, categoryId: string) => {
+    e.preventDefault();
+    if (draggedRangeId) {
+      categoryDropCounter.current++;
+      const sourceRange = rangeDefinitions.find(r => r.id === draggedRangeId);
+      if (sourceRange && sourceRange.categoryId !== categoryId) {
+        setDragOverCategoryForRange(categoryId);
+      }
+    }
+  };
+
+  const handleCategoryDropZoneLeave = () => {
+    categoryDropCounter.current--;
+    if (categoryDropCounter.current === 0) {
+      setDragOverCategoryForRange(null);
+    }
+  };
+
+  const handleCategoryDropZoneDrop = (e: React.DragEvent, categoryId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const data = e.dataTransfer.getData('text/plain');
+    
+    if (data.startsWith('range:')) {
+      const sourceRangeId = data.split(':')[1];
+      const sourceRange = rangeDefinitions.find(r => r.id === sourceRangeId);
+      
+      if (sourceRange && sourceRange.categoryId !== categoryId) {
+        moveRangeToCategory(sourceRangeId, categoryId);
+        const categoryName = categories.find(c => c.id === categoryId)?.name;
+        showToast(`Moved "${sourceRange.name}" to "${categoryName}"`, 'success');
+      }
+    }
+    
+    setDraggedRangeId(null);
+    setDragOverRangeId(null);
+    setDragOverCategoryForRange(null);
+    rangeDragCounter.current = 0;
+    categoryDropCounter.current = 0;
+  };
+
+  if (!hasHydrated) {
+    return (
+      <div className="min-h-screen bg-[#111827] flex flex-col">
+        <header className="h-16 flex items-center justify-between border-b border-slate-800 bg-[#111827] px-6 z-20">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-slate-700 rounded animate-pulse"></div>
+            <div className="h-6 bg-slate-700 rounded w-28 animate-pulse"></div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="h-9 bg-slate-700 rounded w-24 animate-pulse hidden md:block"></div>
+            <div className="h-9 bg-slate-700 rounded w-24 animate-pulse hidden md:block"></div>
+            <div className="h-9 bg-slate-700 rounded w-32 animate-pulse"></div>
+          </div>
+        </header>
+        <main className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-4 md:px-4">
+          <div className="max-w-[1800px] mx-auto flex flex-col gap-6 pb-6">
+            <SkeletonCategory />
+            <div className="h-px w-full bg-slate-800"></div>
+            <SkeletonCategory />
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#111827] flex flex-col">
-      <header className="flex items-center justify-between border-b border-slate-800 bg-[#111827] px-6 py-4 z-20">
-        <div className="flex items-center gap-3">
-          <div className="size-8 rounded bg-[#3b82f6] flex items-center justify-center text-white">
-            <Spade size={20} />
-          </div>
-          <h1 className="text-xl font-bold tracking-tight text-white">RangeDeck</h1>
+      <header className="h-16 flex items-center justify-between border-b border-slate-800 bg-[#111827] px-6 z-20">
+        <div className="flex items-center">
+          <Image src="/logo.svg" alt="RangeDeck" width={180} height={20} priority />
         </div>
         <div className="flex items-center gap-3">
           <label className="hidden md:flex items-center justify-center h-9 px-4 rounded border border-slate-700 hover:bg-slate-800 text-sm font-medium transition-colors cursor-pointer text-white">
             <Upload size={16} className="mr-2" />
-            Import JSON
-            <input
-              type="file"
-              accept=".json"
-              onChange={handleImport}
-              className="hidden"
-            />
-          </label>
-          <button 
-            onClick={exportToJSON}
+              Import JSON
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleImport}
+                className="hidden"
+              />
+            </label>
+            <button
+              onClick={exportToJSON}
             className="hidden md:flex items-center justify-center h-9 px-4 rounded border border-slate-700 hover:bg-slate-800 text-sm font-medium transition-colors text-white"
-          >
+            >
             <Download size={16} className="mr-2" />
-            Export JSON
-          </button>
+              Export JSON
+            </button>
           <button 
             onClick={() => setEditingCategory({ id: '', name: '' })}
             className="flex items-center justify-center h-9 px-4 rounded bg-[#3b82f6] hover:bg-blue-600 text-white text-sm font-bold shadow-sm transition-colors"
           >
             <Plus size={16} className="mr-2" />
             New Category
+          </button>
+          <div className="h-8 w-px bg-slate-700 mx-1" />
+          <button 
+            onClick={() => setShowSettings(true)}
+            className="size-9 rounded-lg bg-slate-800 flex items-center justify-center hover:bg-slate-700 transition-colors"
+            title="Settings"
+          >
+            <Settings size={18} className="text-slate-400" />
           </button>
         </div>
       </header>
@@ -266,7 +394,7 @@ export default function RangeList() {
             const isCategoryDragging = draggedCategoryIndex === categoryIndex;
             const isCategoryDragOver = dragOverCategoryIndex === categoryIndex;
 
-            return (
+          return (
               <section 
                 key={category.id} 
                 className={`flex flex-col gap-2 transition-all ${
@@ -279,7 +407,7 @@ export default function RangeList() {
               >
                 <div className="flex items-center justify-between group p-2 rounded-lg hover:bg-white/5 transition-colors -ml-2">
                   <div className="flex items-center gap-3">
-                    <button 
+                    <button
                       draggable
                       onDragStart={(e) => handleCategoryDragStart(e, categoryIndex)}
                       onDragEnd={handleCategoryDragEnd}
@@ -290,8 +418,8 @@ export default function RangeList() {
                     </button>
                     <h2 className="text-lg font-bold text-slate-100">{category.name}</h2>
                     <div className="flex items-center gap-1">
-                      <button 
-                        onClick={() => setEditingCategory({ id: category.id, name: category.name })}
+                  <button
+                    onClick={() => setEditingCategory({ id: category.id, name: category.name })}
                         className="size-7 flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
                         title="Rename category"
                       >
@@ -308,13 +436,13 @@ export default function RangeList() {
                         title={hasRanges ? "Delete category (Remove ranges first)" : "Delete category"}
                       >
                         <Trash2 size={16} />
-                      </button>
-                    </div>
+                  </button>
+                </div>
                     <span className="px-2 py-0.5 rounded-full bg-slate-800 text-xs font-medium text-slate-400 font-mono-nums">
                       {categoryRanges.length} Ranges
                     </span>
                   </div>
-                  <button 
+                  <button
                     onClick={() => setRangeModalState({ categoryId: category.id, categoryName: category.name })}
                     className="flex items-center gap-1 text-[#3b82f6] hover:text-blue-400 text-sm font-bold transition-colors"
                   >
@@ -339,42 +467,89 @@ export default function RangeList() {
                             onDragEnter={(e) => handleRangeDragEnter(e, range.id)}
                             onDragLeave={handleRangeDragLeave}
                             onDragOver={handleRangeDragOver}
-                            onDrop={(e) => handleRangeDrop(e, range.id)}
+                            onDrop={(e) => handleRangeDrop(e, range.id, category.id)}
                             className={`transition-all ${
                               isRangeDragging ? 'opacity-50 scale-95' : ''
                             } ${isRangeDragOver ? 'ring-2 ring-[#3b82f6] rounded-xl' : ''}`}
                           >
-                            <RangeCard
-                              name={range.name}
-                              rangeData={rangesState.ranges[range.id] || { labels: [], hands: {} }}
-                              onClick={() => handleSelectRange(range.id)}
+                    <RangeCard
+                      name={range.name}
+                              rangeData={ranges[range.id] || { labels: [], hands: {} }}
+                      onClick={() => handleSelectRange(range.id)}
                               onDelete={(e) => handleDeleteRangeClick(e, range.id)}
                             />
                           </div>
                         );
                       })}
-                      <button
-                        onClick={() => setRangeModalState({ categoryId: category.id, categoryName: category.name })}
-                        className="flex-none snap-start w-80 min-h-[400px] flex flex-col items-center justify-center bg-transparent rounded-xl border-2 border-dashed border-slate-700 hover:border-[#3b82f6] hover:bg-slate-800/50 transition-all cursor-pointer group"
+                      <div
+                        className={`range-card-placeholder flex-none snap-start flex flex-col items-center justify-center bg-transparent rounded-xl border-2 border-dashed ${
+                          dragOverCategoryForRange === category.id
+                            ? 'border-[#3b82f6] bg-[#3b82f6]/10'
+                            : 'border-slate-700 hover:border-[#3b82f6] hover:bg-slate-800/50 cursor-pointer'
+                        }`}
+                        onClick={() => !draggedRangeId && setRangeModalState({ categoryId: category.id, categoryName: category.name })}
+                        onDragEnter={(e) => handleCategoryDropZoneEnter(e, category.id)}
+                        onDragLeave={handleCategoryDropZoneLeave}
+                        onDragOver={handleRangeDragOver}
+                        onDrop={(e) => handleCategoryDropZoneDrop(e, category.id)}
                       >
-                        <div className="size-12 rounded-full bg-slate-800 flex items-center justify-center mb-3 group-hover:bg-[#3b82f6]/20 transition-colors">
-                          <Plus size={24} className="text-slate-400 group-hover:text-[#3b82f6]" />
-                        </div>
-                        <span className="text-sm font-semibold text-slate-400 group-hover:text-[#3b82f6]">Create New Range</span>
-                      </button>
+                        {dragOverCategoryForRange === category.id ? (
+                          <>
+                            <div className="size-12 rounded-full bg-[#3b82f6]/20 flex items-center justify-center mb-3">
+                              <Plus size={24} className="text-[#3b82f6]" />
+                            </div>
+                            <span className="text-sm font-semibold text-[#3b82f6]">Drop to move here</span>
+                          </>
+                        ) : (
+                          <>
+                            <div className="size-12 rounded-full bg-slate-800 flex items-center justify-center mb-3 group-hover:bg-[#3b82f6]/20 transition-colors">
+                              <Plus size={24} className="text-slate-400 group-hover:text-[#3b82f6]" />
+                            </div>
+                            <span className="text-sm font-semibold text-slate-400 group-hover:text-[#3b82f6]">Create New Range</span>
+                          </>
+                        )}
+                      </div>
                       <div className="flex-none w-px" aria-hidden="true" />
                     </div>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-10 bg-slate-900/30 rounded-xl border border-dashed border-slate-700">
-                    <div className="bg-slate-800 p-3 rounded-full mb-3">
-                      <Spade size={24} className="text-slate-500" />
+                  <div 
+                    className={`flex flex-col items-center justify-center py-10 bg-slate-900/30 rounded-xl border border-dashed transition-all ${
+                      dragOverCategoryForRange === category.id 
+                        ? 'border-[#3b82f6] bg-[#3b82f6]/10 ring-2 ring-[#3b82f6]' 
+                        : 'border-slate-700'
+                    }`}
+                    onDragEnter={(e) => handleCategoryDropZoneEnter(e, category.id)}
+                    onDragLeave={handleCategoryDropZoneLeave}
+                    onDragOver={handleRangeDragOver}
+                    onDrop={(e) => handleCategoryDropZoneDrop(e, category.id)}
+                  >
+                    <div className={`p-3 rounded-full mb-3 transition-colors ${
+                      dragOverCategoryForRange === category.id ? 'bg-[#3b82f6]/20' : 'bg-slate-800'
+                    }`}>
+                      <Spade size={24} className={`transition-colors ${
+                        dragOverCategoryForRange === category.id ? 'text-[#3b82f6]' : 'text-slate-500'
+                      }`} />
                     </div>
-                    <h3 className="text-sm font-semibold text-white mb-1">No ranges in this category</h3>
-                    <p className="text-xs text-slate-400 mb-4">Start by adding your first range</p>
-                    <button 
+                    <h3 className={`text-sm font-semibold mb-1 transition-colors ${
+                      dragOverCategoryForRange === category.id ? 'text-[#3b82f6]' : 'text-white'
+                    }`}>
+                      {dragOverCategoryForRange === category.id ? 'Drop here to move' : 'No ranges in this category'}
+                    </h3>
+                    <p className={`text-xs mb-4 transition-colors ${
+                      dragOverCategoryForRange === category.id ? 'text-[#3b82f6]/70' : 'text-slate-400'
+                    }`}>
+                      {dragOverCategoryForRange === category.id 
+                        ? 'Release to move range to this category' 
+                        : 'Start by adding your first range or drag one here'}
+                    </p>
+                    <button
                       onClick={() => setRangeModalState({ categoryId: category.id, categoryName: category.name })}
-                      className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded text-sm font-medium text-white transition-colors"
+                      className={`flex items-center gap-2 px-4 py-2 rounded text-sm font-medium text-white transition-colors ${
+                        dragOverCategoryForRange === category.id 
+                          ? 'bg-[#3b82f6]/30 pointer-events-none' 
+                          : 'bg-slate-700 hover:bg-slate-600'
+                      }`}
                     >
                       <Plus size={16} />
                       Add Range
@@ -383,11 +558,11 @@ export default function RangeList() {
                 )}
 
                 <div className="h-px w-full bg-slate-800 mt-1" />
-              </section>
-            );
-          })}
+            </section>
+          );
+        })}
 
-          {categories.length === 0 && (
+        {categories.length === 0 && (
             <div className="flex flex-col items-center justify-center py-20">
               <div className="bg-slate-800 p-4 rounded-full mb-4">
                 <Spade size={32} className="text-slate-500" />
@@ -401,8 +576,8 @@ export default function RangeList() {
                 <Plus size={20} />
                 New Category
               </button>
-            </div>
-          )}
+          </div>
+        )}
         </div>
       </main>
 
@@ -449,6 +624,12 @@ export default function RangeList() {
           confirmLabel="Delete"
           onConfirm={handleConfirmDeleteRange}
           onCancel={() => setDeletingRange(null)}
+        />
+      )}
+
+      {showSettings && (
+        <SettingsModal
+          onClose={() => setShowSettings(false)}
         />
       )}
     </div>

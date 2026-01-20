@@ -1,59 +1,28 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { useEffect } from 'react';
 import { Check, X, AlertCircle, Info } from 'lucide-react';
+import { useToastStore, type Toast } from '../stores/toastStore';
 
-type ToastType = 'success' | 'error' | 'warning' | 'info';
-
-interface Toast {
-  id: string;
-  message: string;
-  type: ToastType;
+export function useToast() {
+  const showToast = useToastStore((state) => state.showToast);
+  return { showToast };
 }
 
-interface ToastContextValue {
-  showToast: (message: string, type?: ToastType) => void;
-}
-
-const ToastContext = createContext<ToastContextValue | null>(null);
-
-export const useToast = () => {
-  const context = useContext(ToastContext);
-  if (!context) {
-    throw new Error('useToast must be used within ToastProvider');
-  }
-  return context;
-};
-
-interface ToastProviderProps {
-  children: ReactNode;
-}
-
-export function ToastProvider({ children }: ToastProviderProps) {
-  const [toasts, setToasts] = useState<Toast[]>([]);
-
-  const showToast = (message: string, type: ToastType = 'success') => {
-    const id = Math.random().toString(36).substr(2, 9);
-    setToasts(prev => [...prev, { id, message, type }]);
-  };
-
-  const removeToast = (id: string) => {
-    setToasts(prev => prev.filter(t => t.id !== id));
-  };
+export function ToastContainer() {
+  const toasts = useToastStore((state) => state.toasts);
+  const removeToast = useToastStore((state) => state.removeToast);
 
   return (
-    <ToastContext.Provider value={{ showToast }}>
-      {children}
-      <div className="fixed bottom-6 right-6 z-[100] flex flex-col gap-2">
-        {toasts.map(toast => (
-          <ToastItem 
-            key={toast.id} 
-            toast={toast} 
-            onRemove={() => removeToast(toast.id)} 
-          />
-        ))}
-      </div>
-    </ToastContext.Provider>
+    <div className="fixed bottom-6 right-6 z-[100] flex flex-col gap-2">
+      {toasts.map(toast => (
+        <ToastItem 
+          key={toast.id} 
+          toast={toast} 
+          onRemove={() => removeToast(toast.id)} 
+        />
+      ))}
+    </div>
   );
 }
 
