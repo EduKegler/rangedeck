@@ -37,6 +37,7 @@ export default function LabelModal({ label, onSave, onClose }: LabelModalProps) 
   const [error, setError] = useState('');
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setName(label?.name || '');
     setColor(label?.color || '#ef4444');
     setError('');

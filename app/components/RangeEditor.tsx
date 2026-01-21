@@ -58,14 +58,12 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(rangeName);
 
-  // Undo/Redo state - block-based (saves state per paint action, not per cell)
   const [history, setHistory] = useState<HandsState[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const stateBeforePaintRef = useRef<HandsState | null>(null);
   const isUndoRedoAction = useRef(false);
   const hasInitialized = useRef(false);
 
-  // Initialize history with current state on mount
   useEffect(() => {
     if (hasHydrated && !hasInitialized.current) {
       hasInitialized.current = true;
@@ -105,14 +103,12 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
   const canUndo = historyIndex > 0;
   const canRedo = historyIndex < history.length - 1;
 
-  // Save state before starting a paint action
   const saveStateBeforePaint = useCallback(() => {
     if (!isUndoRedoAction.current) {
       stateBeforePaintRef.current = { ...rangeData.hands };
     }
   }, [rangeData.hands]);
 
-  // Save state after finishing a paint action (called from handlePaintEnd)
   const saveStateAfterPaint = useCallback(() => {
     if (isUndoRedoAction.current) {
       isUndoRedoAction.current = false;
@@ -122,14 +118,11 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
     const stateBefore = stateBeforePaintRef.current;
     const stateAfter = rangeData.hands;
 
-    // Only save if state actually changed
     if (stateBefore && JSON.stringify(stateBefore) !== JSON.stringify(stateAfter)) {
       setHistory(prev => {
-        // If we're not at the end of history, remove future states
         const newHistory = prev.slice(0, historyIndex + 1);
         newHistory.push({ ...stateAfter });
         
-        // Limit history to 50 states
         if (newHistory.length > 50) {
           newHistory.shift();
           return newHistory;
@@ -149,17 +142,14 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
       const newIndex = historyIndex - 1;
       const previousState = history[newIndex];
 
-      // Apply the previous state
       const currentHands = rangeData.hands;
       const handsToRemove = Object.keys(currentHands).filter(h => !previousState[h]);
       const handsToAdd = Object.entries(previousState);
 
-      // Remove hands that shouldn't exist
       for (const hand of handsToRemove) {
         setHandLabel(rangeId, hand, null);
       }
-
-      // Add/update hands
+      
       for (const [hand, labelId] of handsToAdd) {
         if (currentHands[hand] !== labelId) {
           setHandLabel(rangeId, hand, labelId);
@@ -181,17 +171,14 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
       const newIndex = historyIndex + 1;
       const nextState = history[newIndex];
 
-      // Apply the next state
       const currentHands = rangeData.hands;
       const handsToRemove = Object.keys(currentHands).filter(h => !nextState[h]);
       const handsToAdd = Object.entries(nextState);
 
-      // Remove hands that shouldn't exist
       for (const hand of handsToRemove) {
         setHandLabel(rangeId, hand, null);
       }
 
-      // Add/update hands
       for (const [hand, labelId] of handsToAdd) {
         if (currentHands[hand] !== labelId) {
           setHandLabel(rangeId, hand, labelId);
@@ -207,7 +194,6 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
     }
   }, [historyIndex, history, rangeData.hands, rangeId, setHandLabel, rangeName]);
 
-  // Keyboard shortcuts for undo/redo
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
@@ -275,7 +261,6 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
 
   const handleSaveLabel = (name: string, color: string) => {
     if (editingLabel) {
-      // Determine what changed
       const nameChanged = editingLabel.name !== name;
       const colorChanged = editingLabel.color !== color;
       const changedField = nameChanged && colorChanged ? 'both' : nameChanged ? 'name' : 'color';
@@ -323,7 +308,6 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
       const currentLabelId = rangeData.hands[hand];
 
       if (isFirstClick) {
-        // Save state before starting paint action
         saveStateBeforePaint();
         
         if (currentLabelId === activeLabelId) {
@@ -409,21 +393,18 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
 
   const handlePaintEnd = useCallback(() => {
     if (paintMode !== null) {
-      // Count how many hands changed
       const stateBefore = stateBeforePaintRef.current;
       const stateAfter = rangeData.hands;
 
       if (stateBefore) {
         const changedHands = new Set<string>();
 
-        // Check for added/modified hands
         for (const hand in stateAfter) {
           if (stateBefore[hand] !== stateAfter[hand]) {
             changedHands.add(hand);
           }
         }
 
-        // Check for removed hands
         for (const hand in stateBefore) {
           if (!(hand in stateAfter)) {
             changedHands.add(hand);
@@ -448,7 +429,6 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
         }
       }
 
-      // Save state after finishing paint action
       saveStateAfterPaint();
     }
     setPaintMode(null);

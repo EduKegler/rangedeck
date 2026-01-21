@@ -59,5 +59,4 @@ export const DEFAULT_RANGE_DEFINITIONS: RangeDefinition[] = [
   { id: 'linear-3bet', name: 'Linear 3Bet', categoryId: '3bet' },
 ];
 
-// Backwards compatibility
 export const RANGE_DEFINITIONS = DEFAULT_RANGE_DEFINITIONS;

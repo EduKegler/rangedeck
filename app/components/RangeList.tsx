@@ -80,15 +80,17 @@ function SkeletonCategory() {
   );
 }
 
-// Prefix for category IDs to differentiate from range IDs
 const CATEGORY_PREFIX = 'sortable-category-';
 
 export default function RangeList() {
   const hasHydrated = useRangesStore((state) => state._hasHydrated);
   
   const ranges = useRangesStore((state) => state.ranges);
-  const categories = useRangesStore((state) => state.categories) || [];
-  const rangeDefinitions = useRangesStore((state) => state.rangeDefinitions) || [];
+  const categoriesRaw = useRangesStore((state) => state.categories);
+  const rangeDefinitionsRaw = useRangesStore((state) => state.rangeDefinitions);
+
+  const categories = useMemo(() => categoriesRaw || [], [categoriesRaw]);
+  const rangeDefinitions = useMemo(() => rangeDefinitionsRaw || [], [rangeDefinitionsRaw]);
   const exportToJSON = useRangesStore((state) => state.exportToJSON);
   const importFromJSON = useRangesStore((state) => state.importFromJSON);
   const createCategory = useRangesStore((state) => state.createCategory);
@@ -110,11 +112,9 @@ export default function RangeList() {
   const [deletingRange, setDeletingRange] = useState<{ id: string; name: string } | null>(null);
   const [showSettings, setShowSettings] = useState(false);
 
-  // Unified drag state
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overCategoryId, setOverCategoryId] = useState<string | null>(null);
 
-  // dnd-kit sensors
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -134,7 +134,6 @@ export default function RangeList() {
     return result;
   }, [categories, rangeDefinitions]);
 
-  // Determine if dragging a category or range
   const isCategory = useCallback((id: string) => id.startsWith(CATEGORY_PREFIX), []);
   const getCategoryId = useCallback((id: string) => id.replace(CATEGORY_PREFIX, ''), []);
 
@@ -262,7 +261,6 @@ export default function RangeList() {
     }
   }, [deletingRange, deleteRange, showToast, rangeDefinitions, ranges, categories]);
 
-  // Unified dnd-kit handlers
   const handleDragStart = useCallback((event: DragStartEvent) => {
     setActiveId(event.active.id as string);
   }, []);
@@ -277,13 +275,11 @@ export default function RangeList() {
     const activeIdStr = active.id as string;
     const overId = over.id as string;
 
-    // If dragging a category, don't track overCategoryId
     if (isCategory(activeIdStr)) {
       setOverCategoryId(null);
       return;
     }
 
-    // Dragging a range
     if (overId.startsWith('category-drop-')) {
       setOverCategoryId(overId.replace('category-drop-', ''));
     } else if (!isCategory(overId)) {
@@ -305,7 +301,6 @@ export default function RangeList() {
     const activeIdStr = active.id as string;
     const overId = over.id as string;
 
-    // Handle category reordering
     if (isCategory(activeIdStr) && isCategory(overId)) {
       const activeCatId = getCategoryId(activeIdStr);
       const overCatId = getCategoryId(overId);
@@ -327,12 +322,10 @@ export default function RangeList() {
       return;
     }
 
-    // Handle range operations
     if (!isCategory(activeIdStr)) {
       const activeRangeData = rangeDefinitions.find(r => r.id === activeIdStr);
       if (!activeRangeData) return;
 
-      // Dropped on category drop zone
       if (overId.startsWith('category-drop-')) {
         const targetCategoryId = overId.replace('category-drop-', '');
         if (activeRangeData.categoryId !== targetCategoryId) {
@@ -351,13 +344,11 @@ export default function RangeList() {
         return;
       }
 
-      // Dropped on another range
       if (!isCategory(overId)) {
         const overRange = rangeDefinitions.find(r => r.id === overId);
         if (!overRange) return;
 
-        if (activeIdStr !== overId) {
-          // Handle moving to different category
+        if (activeIdStr !== overId) { 
           if (activeRangeData.categoryId !== overRange.categoryId) {
             const fromCategory = categories.find(c => c.id === activeRangeData.categoryId);
             const toCategory = categories.find(c => c.id === overRange.categoryId);
@@ -371,7 +362,6 @@ export default function RangeList() {
               range_name: activeRangeData.name,
             });
           } else {
-            // Reordering within same category
             const category = categories.find(c => c.id === activeRangeData.categoryId);
 
             trackRangeReordered({

@@ -10,161 +10,161 @@ interface BaseEventParams {
   [key: string]: string | number | boolean | undefined;
 }
 
-interface RangeCreatedParams {
+interface RangeCreatedParams extends BaseEventParams {
   range_name: string;
   category: string;
   method?: 'from_scratch' | 'duplicate';
 }
 
-interface RangeEditedParams {
+interface RangeEditedParams extends BaseEventParams {
   range_id: string;
   range_name: string;
   hand_count: number;
 }
 
-interface RangeDeletedParams {
+interface RangeDeletedParams extends BaseEventParams {
   range_name: string;
   category: string;
   had_custom_hands: boolean;
 }
 
-interface RangeRenamedParams {
+interface RangeRenamedParams extends BaseEventParams {
   old_name: string;
   new_name: string;
   category: string;
 }
 
-interface RangeExportedParams {
+interface RangeExportedParams extends BaseEventParams {
   total_ranges: number;
   total_categories: number;
   custom_ranges_count: number;
 }
 
-interface RangeImportedParams {
+interface RangeImportedParams extends BaseEventParams {
   ranges_count: number;
   categories_count: number;
   merge_mode?: boolean;
 }
 
-interface HandsPaintedParams {
+interface HandsPaintedParams extends BaseEventParams {
   label_name: string;
   label_color: string;
   hands_count: number;
   action_type: 'single' | 'drag';
 }
 
-interface HandsErasedParams {
+interface HandsErasedParams extends BaseEventParams {
   hands_count: number;
 }
 
-interface LabelCreatedParams {
+interface LabelCreatedParams extends BaseEventParams {
   label_name: string;
   label_color: string;
   range_name: string;
 }
 
-interface LabelDeletedParams {
+interface LabelDeletedParams extends BaseEventParams {
   label_name: string;
   affected_hands_count: number;
 }
 
-interface LabelEditedParams {
+interface LabelEditedParams extends BaseEventParams {
   label_name: string;
   changed_field: 'name' | 'color' | 'both';
   range_name: string;
 }
 
-interface LabelReorderedParams {
+interface LabelReorderedParams extends BaseEventParams {
   direction: 'up' | 'down';
   new_position: number;
   label_name: string;
 }
 
-interface LabelSelectedParams {
+interface LabelSelectedParams extends BaseEventParams {
   label_name: string;
   label_color: string;
   range_name: string;
 }
 
-interface CategoryCreatedParams {
+interface CategoryCreatedParams extends BaseEventParams {
   category_name: string;
 }
 
-interface CategoryDeletedParams {
+interface CategoryDeletedParams extends BaseEventParams {
   category_name: string;
   ranges_count: number;
 }
 
-interface CategoryRenamedParams {
+interface CategoryRenamedParams extends BaseEventParams {
   old_name: string;
   new_name: string;
 }
 
-interface CategoryReorderedParams {
+interface CategoryReorderedParams extends BaseEventParams {
   category_name: string;
   direction: 'up' | 'down';
 }
 
-interface RangeMovedParams {
+interface RangeMovedParams extends BaseEventParams {
   from_category: string;
   to_category: string;
   range_name: string;
 }
 
-interface RangeReorderedParams {
+interface RangeReorderedParams extends BaseEventParams {
   category: string;
   range_name: string;
 }
 
-interface UndoUsedParams {
+interface UndoUsedParams extends BaseEventParams {
   range_name: string;
   history_depth: number;
 }
 
-interface RedoUsedParams {
+interface RedoUsedParams extends BaseEventParams {
   range_name: string;
   history_depth: number;
 }
 
-interface SettingsChangedParams {
+interface SettingsChangedParams extends BaseEventParams {
   setting_name: 'grid_font_size' | 'card_size';
   old_value: number;
   new_value: number;
 }
 
-interface EditorSessionStartParams {
+interface EditorSessionStartParams extends BaseEventParams {
   range_name: string;
   label_count: number;
   hands_painted_count: number;
 }
 
-interface EditorSessionEndParams {
+interface EditorSessionEndParams extends BaseEventParams {
   range_name: string;
   time_spent_seconds: number;
   changes_made: number;
 }
 
-interface CardPreviewedParams {
+interface CardPreviewedParams extends BaseEventParams {
   range_name: string;
   category: string;
 }
 
-interface KeyboardShortcutUsedParams {
+interface KeyboardShortcutUsedParams extends BaseEventParams {
   shortcut_name: string;
   context: string;
 }
 
-interface ErrorOccurredParams {
+interface ErrorOccurredParams extends BaseEventParams {
   error_type: string;
   error_message: string;
   context: string;
 }
 
-interface ImportFailedParams {
+interface ImportFailedParams extends BaseEventParams {
   error_reason: string;
 }
 
-interface GridPatternDetectedParams {
+interface GridPatternDetectedParams extends BaseEventParams {
   pattern_type: 'horizontal' | 'vertical' | 'diagonal' | 'block';
   range_name: string;
 }

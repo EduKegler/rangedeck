@@ -15,6 +15,7 @@ export default function CategoryModal({ category, onSave, onClose }: CategoryMod
   const [error, setError] = useState('');
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setName(category?.name || '');
     setError('');
   }, [category]);

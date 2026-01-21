@@ -52,7 +52,7 @@ export async function generateMetadata({ params }: EditRangePageProps): Promise<
       description,
     },
     robots: {
-      index: !!rangeInfo, // Only index default ranges
+      index: !!rangeInfo, 
       follow: true,
     },
   };
