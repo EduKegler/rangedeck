@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { X, Minus, Plus } from 'lucide-react';
 import { useSettingsStore, type SettingsState } from '../stores/settingsStore';
+import { trackSettingsChanged } from '@/lib/analytics';
 
 const CARD_SIZE_OPTIONS = [
   { value: 280, label: 'Small' },
@@ -31,11 +32,11 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
   const cardSize = useSettingsStore((state) => state.cardSize);
   const setGridFontSize = useSettingsStore((state) => state.setGridFontSize);
   const setCardSize = useSettingsStore((state) => state.setCardSize);
-  const reset = useSettingsStore((state) => state.reset);
 
   const [localSettings, setLocalSettings] = useState<SettingsState>({ gridFontSize, cardSize });
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLocalSettings({ gridFontSize, cardSize });
   }, [gridFontSize, cardSize]);
 
@@ -62,12 +63,28 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
   };
 
   const handleSave = () => {
+    if (gridFontSize !== localSettings.gridFontSize) {
+      trackSettingsChanged({
+        setting_name: 'grid_font_size',
+        old_value: gridFontSize,
+        new_value: localSettings.gridFontSize,
+      });
+    }
+
+    if (cardSize !== localSettings.cardSize) {
+      trackSettingsChanged({
+        setting_name: 'card_size',
+        old_value: cardSize,
+        new_value: localSettings.cardSize,
+      });
+    }
+
     setGridFontSize(localSettings.gridFontSize);
     setCardSize(localSettings.cardSize);
-    
+
     document.documentElement.style.setProperty('--settings-card-size', `${localSettings.cardSize}px`);
     document.documentElement.style.setProperty('--settings-grid-font-size', `${localSettings.gridFontSize}px`);
-    
+
     onClose();
   };
 

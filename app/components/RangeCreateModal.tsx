@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { X, AlertCircle } from 'lucide-react';
+import { trackRangeCreated } from '@/lib/analytics';
 
 interface RangeCreateModalProps {
   categoryId: string;
@@ -16,7 +17,14 @@ export default function RangeCreateModal({ categoryId, categoryName, onSave, onC
 
   const handleSave = () => {
     if (name.trim()) {
-      onSave(name.trim(), categoryId);
+      const rangeName = name.trim();
+      onSave(rangeName, categoryId);
+
+      trackRangeCreated({
+        range_name: rangeName,
+        category: categoryName,
+        method: 'from_scratch',
+      });
     } else {
       setError('Please enter a range name');
     }

@@ -9,6 +9,22 @@ import LabelSidebar from './LabelSidebar';
 import LabelModal from './LabelModal';
 import { useRangesStore } from '../stores/rangesStore';
 import type { Label } from '../types/range';
+import {
+  trackRangeEdited,
+  trackHandsPainted,
+  trackHandsErased,
+  trackUndoUsed,
+  trackRedoUsed,
+  trackRangeRenamed,
+  trackEditorSessionStart,
+  trackEditorSessionEnd,
+  trackLabelCreated,
+  trackLabelEdited,
+  trackLabelSelected,
+  trackLabelDeleted,
+  trackLabelReordered,
+  trackKeyboardShortcutUsed,
+} from '@/lib/analytics';
 
 interface RangeEditorProps {
   rangeId: string;
@@ -58,6 +74,34 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
     }
   }, [hasHydrated, rangeData.hands]);
 
+  useEffect(() => {
+    if (!hasHydrated) return;
+
+    const sessionStartTime = Date.now();
+
+    trackRangeEdited({
+      range_id: rangeId,
+      range_name: rangeName,
+      hand_count: Object.keys(rangeData.hands).length,
+    });
+
+    trackEditorSessionStart({
+      range_name: rangeName,
+      label_count: rangeData.labels.length,
+      hands_painted_count: Object.keys(rangeData.hands).length,
+    });
+
+    return () => {
+      const timeSpentSeconds = Math.floor((Date.now() - sessionStartTime) / 1000);
+      trackEditorSessionEnd({
+        range_name: rangeName,
+        time_spent_seconds: timeSpentSeconds,
+        changes_made: historyIndex,
+      });
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasHydrated, rangeId]);
+
   const canUndo = historyIndex > 0;
   const canRedo = historyIndex < history.length - 1;
 
@@ -104,54 +148,64 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
       isUndoRedoAction.current = true;
       const newIndex = historyIndex - 1;
       const previousState = history[newIndex];
-      
+
       // Apply the previous state
       const currentHands = rangeData.hands;
       const handsToRemove = Object.keys(currentHands).filter(h => !previousState[h]);
       const handsToAdd = Object.entries(previousState);
-      
+
       // Remove hands that shouldn't exist
       for (const hand of handsToRemove) {
         setHandLabel(rangeId, hand, null);
       }
-      
+
       // Add/update hands
       for (const [hand, labelId] of handsToAdd) {
         if (currentHands[hand] !== labelId) {
           setHandLabel(rangeId, hand, labelId);
         }
       }
-      
+
       setHistoryIndex(newIndex);
+
+      trackUndoUsed({
+        range_name: rangeName,
+        history_depth: newIndex,
+      });
     }
-  }, [historyIndex, history, rangeData.hands, rangeId, setHandLabel]);
+  }, [historyIndex, history, rangeData.hands, rangeId, setHandLabel, rangeName]);
 
   const handleRedo = useCallback(() => {
     if (historyIndex < history.length - 1) {
       isUndoRedoAction.current = true;
       const newIndex = historyIndex + 1;
       const nextState = history[newIndex];
-      
+
       // Apply the next state
       const currentHands = rangeData.hands;
       const handsToRemove = Object.keys(currentHands).filter(h => !nextState[h]);
       const handsToAdd = Object.entries(nextState);
-      
+
       // Remove hands that shouldn't exist
       for (const hand of handsToRemove) {
         setHandLabel(rangeId, hand, null);
       }
-      
+
       // Add/update hands
       for (const [hand, labelId] of handsToAdd) {
         if (currentHands[hand] !== labelId) {
           setHandLabel(rangeId, hand, labelId);
         }
       }
-      
+
       setHistoryIndex(newIndex);
+
+      trackRedoUsed({
+        range_name: rangeName,
+        history_depth: newIndex,
+      });
     }
-  }, [historyIndex, history, rangeData.hands, rangeId, setHandLabel]);
+  }, [historyIndex, history, rangeData.hands, rangeId, setHandLabel, rangeName]);
 
   // Keyboard shortcuts for undo/redo
   useEffect(() => {
@@ -160,13 +214,25 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
         e.preventDefault();
         if (e.shiftKey) {
           handleRedo();
+          trackKeyboardShortcutUsed({
+            shortcut_name: 'redo',
+            context: 'range_editor',
+          });
         } else {
           handleUndo();
+          trackKeyboardShortcutUsed({
+            shortcut_name: 'undo',
+            context: 'range_editor',
+          });
         }
       }
       if ((e.metaKey || e.ctrlKey) && e.key === 'y') {
         e.preventDefault();
         handleRedo();
+        trackKeyboardShortcutUsed({
+          shortcut_name: 'redo',
+          context: 'range_editor',
+        });
       }
     };
 
@@ -209,19 +275,46 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
 
   const handleSaveLabel = (name: string, color: string) => {
     if (editingLabel) {
+      // Determine what changed
+      const nameChanged = editingLabel.name !== name;
+      const colorChanged = editingLabel.color !== color;
+      const changedField = nameChanged && colorChanged ? 'both' : nameChanged ? 'name' : 'color';
+
       updateLabel(rangeId, editingLabel.id, name, color);
+
+      trackLabelEdited({
+        label_name: name,
+        changed_field: changedField,
+        range_name: rangeName,
+      });
     } else {
       const newLabelId = createLabel(rangeId, name, color);
       setActiveLabelId(newLabelId);
+
+      trackLabelCreated({
+        label_name: name,
+        label_color: color,
+        range_name: rangeName,
+      });
     }
     setIsModalOpen(false);
     setEditingLabel(undefined);
   };
 
   const handleDeleteLabel = (labelId: string) => {
+    const label = rangeData.labels.find(l => l.id === labelId);
+    const affectedHandsCount = Object.values(rangeData.hands).filter(id => id === labelId).length;
+
     deleteLabel(rangeId, labelId);
     if (activeLabelId === labelId) {
       setActiveLabelId(null);
+    }
+
+    if (label) {
+      trackLabelDeleted({
+        label_name: label.name,
+        affected_hands_count: affectedHandsCount,
+      });
     }
   };
 
@@ -261,8 +354,20 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
 
   const handleSaveName = () => {
     if (editedName.trim()) {
-      setRangeName(rangeId, editedName.trim());
+      const newName = editedName.trim();
+      const oldName = rangeName;
+
+      setRangeName(rangeId, newName);
       setIsEditingName(false);
+
+      if (oldName !== newName) {
+        const category = rangeDefinitions?.find(r => r.id === rangeId);
+        trackRangeRenamed({
+          old_name: oldName,
+          new_name: newName,
+          category: category?.name || 'Unknown',
+        });
+      }
     }
   };
 
@@ -272,16 +377,82 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
   };
 
   const handleMoveLabel = (labelId: string, direction: 'up' | 'down') => {
+    const label = rangeData.labels.find(l => l.id === labelId);
+    const currentIndex = rangeData.labels.findIndex(l => l.id === labelId);
+    const newPosition = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+
     reorderLabel(rangeId, labelId, direction);
+
+    if (label) {
+      trackLabelReordered({
+        direction,
+        new_position: newPosition,
+        label_name: label.name,
+      });
+    }
+  };
+
+  const handleSelectLabel = (labelId: string | null) => {
+    setActiveLabelId(labelId);
+
+    if (labelId) {
+      const label = rangeData.labels.find(l => l.id === labelId);
+      if (label) {
+        trackLabelSelected({
+          label_name: label.name,
+          label_color: label.color,
+          range_name: rangeName,
+        });
+      }
+    }
   };
 
   const handlePaintEnd = useCallback(() => {
     if (paintMode !== null) {
+      // Count how many hands changed
+      const stateBefore = stateBeforePaintRef.current;
+      const stateAfter = rangeData.hands;
+
+      if (stateBefore) {
+        const changedHands = new Set<string>();
+
+        // Check for added/modified hands
+        for (const hand in stateAfter) {
+          if (stateBefore[hand] !== stateAfter[hand]) {
+            changedHands.add(hand);
+          }
+        }
+
+        // Check for removed hands
+        for (const hand in stateBefore) {
+          if (!(hand in stateAfter)) {
+            changedHands.add(hand);
+          }
+        }
+
+        if (changedHands.size > 0) {
+          const activeLabel = rangeData.labels.find(l => l.id === activeLabelId);
+
+          if (paintMode === 'paint' && activeLabel) {
+            trackHandsPainted({
+              label_name: activeLabel.name,
+              label_color: activeLabel.color,
+              hands_count: changedHands.size,
+              action_type: changedHands.size > 1 ? 'drag' : 'single',
+            });
+          } else if (paintMode === 'erase') {
+            trackHandsErased({
+              hands_count: changedHands.size,
+            });
+          }
+        }
+      }
+
       // Save state after finishing paint action
       saveStateAfterPaint();
     }
     setPaintMode(null);
-  }, [paintMode, saveStateAfterPaint]);
+  }, [paintMode, saveStateAfterPaint, rangeData.hands, rangeData.labels, activeLabelId]);
 
   if (!hasHydrated) {
     return (
@@ -410,7 +581,7 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
         <LabelSidebar
           labels={rangeData.labels}
           activeLabelId={activeLabelId}
-          onSelectLabel={setActiveLabelId}
+          onSelectLabel={handleSelectLabel}
           onCreateLabel={handleCreateLabel}
           onEditLabel={handleEditLabel}
           onDeleteLabel={handleDeleteLabel}

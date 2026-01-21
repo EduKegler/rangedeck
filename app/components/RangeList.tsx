@@ -5,6 +5,18 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Plus, Upload, Download, Spade, Settings } from 'lucide-react';
 import {
+  trackRangeExported,
+  trackRangeImported,
+  trackRangeDeleted,
+  trackCategoryReordered,
+  trackRangeMoved,
+  trackRangeReordered,
+  trackCategoryCreated,
+  trackCategoryRenamed,
+  trackCategoryDeleted,
+  trackImportFailed,
+} from '@/lib/analytics';
+import {
   DndContext,
   DragOverlay,
   closestCenter,
@@ -142,12 +154,25 @@ export default function RangeList() {
     if (file) {
       importFromJSON(
         file,
-        () => showToast('Ranges imported successfully', 'success'),
-        (error) => showToast(error, 'error')
+        () => {
+          showToast('Ranges imported successfully', 'success');
+
+          trackRangeImported({
+            ranges_count: rangeDefinitions.length,
+            categories_count: categories.length,
+          });
+        },
+        (error) => {
+          showToast(error, 'error');
+
+          trackImportFailed({
+            error_reason: error,
+          });
+        }
       );
       e.target.value = '';
     }
-  }, [importFromJSON, showToast]);
+  }, [importFromJSON, showToast, rangeDefinitions.length, categories.length]);
 
   const handleSelectRange = useCallback((rangeId: string) => {
     router.push(`/edit/${rangeId}`);
@@ -155,11 +180,21 @@ export default function RangeList() {
 
   const handleSaveCategory = useCallback((name: string) => {
     if (editingCategory?.id) {
+      const oldName = editingCategory.name;
       updateCategory(editingCategory.id, name);
       showToast('Category updated', 'success');
+
+      trackCategoryRenamed({
+        old_name: oldName,
+        new_name: name,
+      });
     } else {
       createCategory(name);
       showToast('Category created', 'success');
+
+      trackCategoryCreated({
+        category_name: name,
+      });
     }
     setEditingCategory(null);
   }, [editingCategory, updateCategory, createCategory, showToast]);
@@ -180,13 +215,19 @@ export default function RangeList() {
 
   const handleConfirmDeleteCategory = useCallback(() => {
     if (deletingCategory) {
+      const rangesCount = (rangesByCategory[deletingCategory.id] || []).length;
       const success = deleteCategory(deletingCategory.id);
       if (success) {
         showToast(`Category "${deletingCategory.name}" deleted`, 'success');
+
+        trackCategoryDeleted({
+          category_name: deletingCategory.name,
+          ranges_count: rangesCount,
+        });
       }
       setDeletingCategory(null);
     }
-  }, [deletingCategory, deleteCategory, showToast]);
+  }, [deletingCategory, deleteCategory, showToast, rangesByCategory]);
 
   const handleCreateRange = useCallback((name: string, categoryId: string) => {
     createRange(name, categoryId);
@@ -204,11 +245,22 @@ export default function RangeList() {
 
   const handleConfirmDeleteRange = useCallback(() => {
     if (deletingRange) {
+      const rangeDef = rangeDefinitions.find(r => r.id === deletingRange.id);
+      const rangeData = ranges[deletingRange.id];
+      const category = categories.find(c => c.id === rangeDef?.categoryId);
+
       deleteRange(deletingRange.id);
       showToast(`Range "${deletingRange.name}" deleted`, 'success');
+
+      trackRangeDeleted({
+        range_name: deletingRange.name,
+        category: category?.name || 'Unknown',
+        had_custom_hands: rangeData ? Object.keys(rangeData.hands).length > 0 : false,
+      });
+
       setDeletingRange(null);
     }
-  }, [deletingRange, deleteRange, showToast]);
+  }, [deletingRange, deleteRange, showToast, rangeDefinitions, ranges, categories]);
 
   // Unified dnd-kit handlers
   const handleDragStart = useCallback((event: DragStartEvent) => {
@@ -257,13 +309,19 @@ export default function RangeList() {
     if (isCategory(activeIdStr) && isCategory(overId)) {
       const activeCatId = getCategoryId(activeIdStr);
       const overCatId = getCategoryId(overId);
-      
+
       if (activeCatId !== overCatId) {
         const activeIndex = categories.findIndex(c => c.id === activeCatId);
         const overIndex = categories.findIndex(c => c.id === overCatId);
-        
+
         if (activeIndex !== -1 && overIndex !== -1) {
+          const activeCategory = categories[activeIndex];
           reorderCategoryByIndex(activeIndex, overIndex);
+
+          trackCategoryReordered({
+            category_name: activeCategory.name,
+            direction: overIndex > activeIndex ? 'down' : 'up',
+          });
         }
       }
       return;
@@ -278,9 +336,17 @@ export default function RangeList() {
       if (overId.startsWith('category-drop-')) {
         const targetCategoryId = overId.replace('category-drop-', '');
         if (activeRangeData.categoryId !== targetCategoryId) {
+          const fromCategory = categories.find(c => c.id === activeRangeData.categoryId);
+          const toCategory = categories.find(c => c.id === targetCategoryId);
+
           moveRangeToCategory(activeIdStr, targetCategoryId);
-          const categoryName = categories.find(c => c.id === targetCategoryId)?.name;
-          showToast(`Moved "${activeRangeData.name}" to "${categoryName}"`, 'success');
+          showToast(`Moved "${activeRangeData.name}" to "${toCategory?.name}"`, 'success');
+
+          trackRangeMoved({
+            from_category: fromCategory?.name || 'Unknown',
+            to_category: toCategory?.name || 'Unknown',
+            range_name: activeRangeData.name,
+          });
         }
         return;
       }
@@ -291,12 +357,29 @@ export default function RangeList() {
         if (!overRange) return;
 
         if (activeIdStr !== overId) {
+          // Handle moving to different category
           if (activeRangeData.categoryId !== overRange.categoryId) {
+            const fromCategory = categories.find(c => c.id === activeRangeData.categoryId);
+            const toCategory = categories.find(c => c.id === overRange.categoryId);
+
             moveRangeToCategory(activeIdStr, overRange.categoryId);
-            const categoryName = categories.find(c => c.id === overRange.categoryId)?.name;
-            showToast(`Moved "${activeRangeData.name}" to "${categoryName}"`, 'success');
+            showToast(`Moved "${activeRangeData.name}" to "${toCategory?.name}"`, 'success');
+
+            trackRangeMoved({
+              from_category: fromCategory?.name || 'Unknown',
+              to_category: toCategory?.name || 'Unknown',
+              range_name: activeRangeData.name,
+            });
+          } else {
+            // Reordering within same category
+            const category = categories.find(c => c.id === activeRangeData.categoryId);
+
+            trackRangeReordered({
+              category: category?.name || 'Unknown',
+              range_name: activeRangeData.name,
+            });
           }
-          
+
           const targetIndex = rangeDefinitions.findIndex(r => r.id === overId);
           if (targetIndex !== -1) {
             reorderRange(activeIdStr, targetIndex);
@@ -351,7 +434,19 @@ export default function RangeList() {
             />
           </label>
           <button
-            onClick={exportToJSON}
+            onClick={() => {
+              exportToJSON();
+
+              const customRangesCount = rangeDefinitions.filter(r =>
+                ranges[r.id]?.customName || Object.keys(ranges[r.id]?.hands || {}).length > 0
+              ).length;
+
+              trackRangeExported({
+                total_ranges: rangeDefinitions.length,
+                total_categories: categories.length,
+                custom_ranges_count: customRangesCount,
+              });
+            }}
             className="hidden md:flex items-center justify-center h-9 px-4 rounded border border-slate-700 hover:bg-slate-800 text-sm font-medium transition-colors text-white"
           >
             <Download size={16} className="mr-2" />
