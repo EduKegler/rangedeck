@@ -42,6 +42,7 @@ import CategoryModal from './CategoryModal';
 import RangeCreateModal from './RangeCreateModal';
 import ConfirmModal from './ConfirmModal';
 import SettingsModal from './SettingsModal';
+import Footer from './Footer';
 import { useRangesStore } from '../stores/rangesStore';
 import { useToastStore } from '../stores/toastStore';
 
@@ -649,6 +650,8 @@ export default function RangeList() {
           </DragOverlay>
         </DndContext>
       </main>
+
+      <Footer />
 
       <div className="fixed bottom-6 right-6 md:hidden">
         <button 

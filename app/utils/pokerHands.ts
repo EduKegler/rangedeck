@@ -45,3 +45,19 @@ export function getHandAtPosition(row: number, col: number): string {
     return `${rank2}${rank1}o`;
   }
 }
+
+export function getHandCombos(hand: string): number {
+  if (hand.endsWith('s')) {
+    return 4;
+  } else if (hand.endsWith('o')) {
+    return 12;
+  } else {
+    return 6;
+  }
+}
+
+export function calculateTotalCombos(hands: { [hand: string]: string }): number {
+  return Object.keys(hands).reduce((total, hand) => {
+    return total + getHandCombos(hand);
+  }, 0);
+}

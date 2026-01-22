@@ -7,8 +7,10 @@ import { ArrowLeft, Pencil, Check, X, Undo2, Redo2 } from 'lucide-react';
 import PokerGrid from './PokerGrid';
 import LabelSidebar from './LabelSidebar';
 import LabelModal from './LabelModal';
+import Footer from './Footer';
 import { useRangesStore } from '../stores/rangesStore';
 import type { Label } from '../types/range';
+import { calculateTotalCombos } from '../utils/pokerHands';
 import {
   trackRangeEdited,
   trackHandsPainted,
@@ -80,7 +82,7 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
     trackRangeEdited({
       range_id: rangeId,
       range_name: rangeName,
-      hand_count: Object.keys(rangeData.hands).length,
+      hand_count: calculateTotalCombos(rangeData.hands),
     });
 
     trackEditorSessionStart({
@@ -242,12 +244,16 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
   }, [rangeData.labels, activeLabelId]);
 
   const handCounts: { [labelId: string]: number } = {};
-  Object.values(rangeData.hands).forEach(labelId => {
+  const comboCounts: { [labelId: string]: number } = {};
+  
+  Object.entries(rangeData.hands).forEach(([hand, labelId]) => {
     handCounts[labelId] = (handCounts[labelId] || 0) + 1;
+    const combos = (hand.endsWith('s') ? 4 : hand.endsWith('o') ? 12 : 6);
+    comboCounts[labelId] = (comboCounts[labelId] || 0) + combos;
   });
 
-  const totalHands = Object.keys(rangeData.hands).length;
-  const frequency = ((totalHands / 169) * 100).toFixed(1);
+  const totalCombos = calculateTotalCombos(rangeData.hands);
+  const frequency = ((totalCombos / 1326) * 100).toFixed(1);
 
   const handleCreateLabel = () => {
     setEditingLabel(undefined);
@@ -523,7 +529,7 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
 
         <div className="flex items-center gap-4">
           <div className="hidden md:flex items-center gap-2 text-[#90a7cb] text-sm">
-            <span>Total Combos: <strong className="text-white font-mono-nums">{totalHands}</strong></span>
+            <span>Total Combos: <strong className="text-white font-mono-nums">{totalCombos}</strong></span>
             <span className="w-1 h-1 rounded-full bg-[#223149]"></span>
             <span>Freq: <strong className="text-white font-mono-nums">{frequency}%</strong></span>
           </div>
@@ -567,6 +573,7 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
           onDeleteLabel={handleDeleteLabel}
           onMoveLabel={handleMoveLabel}
           handCounts={handCounts}
+          comboCounts={comboCounts}
         />
 
         <main className="flex-1 bg-[#0b1019] flex flex-col items-center justify-center p-4 md:p-6">
@@ -588,7 +595,7 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
                       style={{ backgroundColor: label.color }}
                     />
                     <span className="text-white font-medium">{label.name}</span>
-                    <span className="text-[#90a7cb] text-xs font-mono-nums">({handCounts[label.id] ?? 0})</span>
+                    <span className="text-[#90a7cb] text-xs font-mono-nums">({comboCounts[label.id] ?? 0})</span>
                   </div>
                 ))}
               </div>
@@ -611,6 +618,8 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
           }}
         />
       )}
+
+      <Footer />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Trash2, GripVertical, Pencil } from 'lucide-react';
 import type { RangeData } from '../types/range';
 import PokerGridPreview from './PokerGridPreview';
+import { calculateTotalCombos, getHandCombos } from '../utils/pokerHands';
 
 interface RangeCardProps {
   name: string;
@@ -48,19 +49,20 @@ export default function RangeCard({ name, rangeData, onClick, onDelete, onRename
       setEditValue(displayName);
     }
   };
-  const handCount = Object.keys(rangeData.hands).length;
-  const frequency = ((handCount / 169) * 100).toFixed(1);
+  const totalCombos = calculateTotalCombos(rangeData.hands);
+  const frequency = ((totalCombos / 1326) * 100).toFixed(1);
 
-  const counts = new Map<string, number>();
-  Object.values(rangeData.hands).forEach(labelId => {
-    counts.set(labelId, (counts.get(labelId) || 0) + 1);
+  const comboCounts = new Map<string, number>();
+  Object.entries(rangeData.hands).forEach(([hand, labelId]) => {
+    const combos = getHandCombos(hand);
+    comboCounts.set(labelId, (comboCounts.get(labelId) || 0) + combos);
   });
 
   const labelStats = rangeData.labels
     .map(label => ({
       label,
-      count: counts.get(label.id) || 0,
-      percentage: ((counts.get(label.id) || 0) / 169) * 100,
+      count: comboCounts.get(label.id) || 0,
+      percentage: ((comboCounts.get(label.id) || 0) / 1326) * 100,
     }))
     .filter(item => item.count > 0);
 

@@ -15,6 +15,7 @@ interface LabelSidebarProps {
   onDeleteLabel: (labelId: string) => void;
   onMoveLabel: (labelId: string, direction: 'up' | 'down') => void;
   handCounts: { [labelId: string]: number };
+  comboCounts: { [labelId: string]: number };
 }
 
 export default function LabelSidebar({
@@ -26,6 +27,7 @@ export default function LabelSidebar({
   onDeleteLabel,
   onMoveLabel,
   handCounts,
+  comboCounts,
 }: LabelSidebarProps) {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
@@ -33,7 +35,7 @@ export default function LabelSidebar({
   const dragCounter = useRef(0);
   const showToast = useToastStore((state) => state.showToast);
 
-  const totalHands = Object.values(handCounts).reduce((sum, count) => sum + count, 0);
+  const totalCombos = Object.values(comboCounts).reduce((sum, count) => sum + count, 0);
 
   const handleLabelClick = (labelId: string) => {
     onSelectLabel(labelId);
@@ -60,9 +62,9 @@ export default function LabelSidebar({
   };
 
   const getPercentage = (labelId: string) => {
-    const count = handCounts[labelId] || 0;
-    if (totalHands === 0) return 0;
-    return Math.round((count / totalHands) * 100);
+    const count = comboCounts[labelId] || 0;
+    if (totalCombos === 0) return 0;
+    return Math.round((count / totalCombos) * 100);
   };
 
   const handleDragStart = (e: React.DragEvent, labelId: string) => {
