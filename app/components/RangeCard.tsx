@@ -96,21 +96,21 @@ export default function RangeCard({ name, rangeData, onClick, onDelete, onRename
               <button
                 onClick={handleStartEdit}
                 className="opacity-0 group-hover/title:opacity-100 size-5 flex items-center justify-center rounded text-slate-400 hover:text-[#3b82f6] transition-all shrink-0"
-                title="Edit name"
+                aria-label="Edit range name"
               >
-                <Pencil size={12} />
+                <Pencil size={12} aria-hidden="true" />
               </button>
             )}
           </div>
         )}
-        <span className="text-xs font-mono-nums text-slate-400 shrink-0">{frequency}%</span>
+        <span className="text-xs font-mono-nums text-slate-300 shrink-0">{frequency}%</span>
         {onDelete && (
-          <button 
+          <button
             onClick={(e) => { e.stopPropagation(); onDelete(e); }}
             className="size-6 flex items-center justify-center rounded text-slate-400 hover:text-red-500 transition-colors shrink-0"
-            title="Delete Range"
+            aria-label="Delete range"
           >
-            <Trash2 size={16} />
+            <Trash2 size={16} aria-hidden="true" />
           </button>
         )}
       </div>
@@ -134,7 +134,7 @@ export default function RangeCard({ name, rangeData, onClick, onDelete, onRename
                 <span className="text-[10px] font-medium text-slate-300 truncate max-w-[60px]">
                   {label.name}
                 </span>
-                <span className="text-[10px] font-mono-nums text-slate-400">
+                <span className="text-[10px] font-mono-nums text-slate-300">
                   {percentage.toFixed(0)}%
                 </span>
               </div>
@@ -150,7 +150,7 @@ export default function RangeCard({ name, rangeData, onClick, onDelete, onRename
               <span className="text-[10px] font-medium text-slate-300 truncate max-w-[60px]">
                 {defaultLabel.name}
               </span>
-              <span className="text-[10px] font-mono-nums text-slate-400">
+              <span className="text-[10px] font-mono-nums text-slate-300">
                 0%
               </span>
             </div>

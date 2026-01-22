@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { X, AlertCircle } from 'lucide-react';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import { trackRangeCreated } from '@/lib/analytics';
 
 interface RangeCreateModalProps {
@@ -12,6 +13,7 @@ interface RangeCreateModalProps {
 }
 
 export default function RangeCreateModal({ categoryId, categoryName, onSave, onClose }: RangeCreateModalProps) {
+  const modalRef = useFocusTrap(true);
   const [name, setName] = useState('');
   const [error, setError] = useState('');
 
@@ -37,40 +39,51 @@ export default function RangeCreateModal({ categoryId, categoryName, onSave, onC
 
   return (
     <div className="fixed inset-0 z-50">
-      <div 
+      <div
         className="absolute inset-0 bg-[#0b1019]/60 backdrop-blur-[2px]"
         onClick={onClose}
+        aria-hidden="true"
       />
       <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
-        <div className="w-full max-w-[480px] bg-[#1a2332] border border-slate-700/60 rounded-xl shadow-2xl overflow-hidden">
+        <div
+          ref={modalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="range-create-modal-title"
+          className="w-full max-w-[480px] bg-[#1a2332] border border-slate-700/60 rounded-xl shadow-2xl overflow-hidden"
+        >
           <div className="flex items-center justify-between px-6 py-5 border-b border-slate-700/50">
-            <h2 className="text-xl font-bold text-white tracking-tight">New Range</h2>
-            <button 
+            <h2 id="range-create-modal-title" className="text-xl font-bold text-white tracking-tight">New Range</h2>
+            <button
               onClick={onClose}
               className="text-slate-400 hover:text-white transition-colors p-1 rounded-full hover:bg-white/5"
+              aria-label="Close dialog"
             >
-              <X size={24} />
+              <X size={24} aria-hidden="true" />
             </button>
           </div>
           <div className="p-6 flex flex-col gap-6">
-            <label className="flex flex-col gap-2">
+            <label htmlFor="range-name-input" className="flex flex-col gap-2">
               <span className="text-white text-sm font-medium leading-normal">Range Name</span>
               <input
+                id="range-name-input"
                 type="text"
                 value={name}
                 onChange={(e) => handleChange(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSave()}
                 className={`w-full bg-[#111822] border rounded-lg h-12 px-4 text-white placeholder:text-slate-500 focus:outline-none transition-all text-sm ${
-                  error 
-                    ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500' 
+                  error
+                    ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500'
                     : 'border-slate-700 focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]'
                 }`}
                 placeholder="e.g., RFI 2.5x from UTG"
+                aria-invalid={!!error}
+                aria-describedby={error ? 'range-error' : undefined}
                 autoFocus
               />
               {error && (
-                <div className="flex items-center gap-2 text-red-400 text-sm">
-                  <AlertCircle size={14} />
+                <div id="range-error" className="flex items-center gap-2 text-red-400 text-sm" role="alert">
+                  <AlertCircle size={14} aria-hidden="true" />
                   <span>{error}</span>
                 </div>
               )}

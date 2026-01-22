@@ -501,22 +501,23 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
                   }}
                   autoFocus
                 />
-                <Button size="sm" color="primary" isIconOnly onPress={handleSaveName}>
-                  <Check size={16} />
+                <Button size="sm" color="primary" isIconOnly onPress={handleSaveName} aria-label="Save range name">
+                  <Check size={16} aria-hidden="true" />
                 </Button>
-                <Button size="sm" variant="flat" isIconOnly onPress={handleCancelEditName}>
-                  <X size={16} />
+                <Button size="sm" variant="flat" isIconOnly onPress={handleCancelEditName} aria-label="Cancel editing">
+                  <X size={16} aria-hidden="true" />
                 </Button>
               </div>
             ) : (
-              <button 
+              <button
                 onClick={handleEditName}
                 className="flex items-center gap-2 group cursor-pointer"
+                aria-label="Edit range name"
               >
                 <h1 className="text-white text-lg font-bold leading-tight tracking-tight hover:underline decoration-blue-500 underline-offset-4 decoration-2">
                   {rangeName}
                 </h1>
-                <Pencil size={14} className="text-[#90a7cb]" />
+                <Pencil size={14} className="text-[#90a7cb]" aria-hidden="true" />
               </button>
             )}
             
@@ -544,9 +545,9 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
               isDisabled={!canUndo}
               onPress={handleUndo}
               className="bg-[#223149] hover:bg-[#223149]/80 text-white disabled:opacity-30"
-              title="Undo (Ctrl+Z)"
+              aria-label="Undo (Ctrl+Z)"
             >
-              <Undo2 size={16} />
+              <Undo2 size={16} aria-hidden="true" />
             </Button>
             <Button
               size="sm"
@@ -555,9 +556,9 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
               isDisabled={!canRedo}
               onPress={handleRedo}
               className="bg-[#223149] hover:bg-[#223149]/80 text-white disabled:opacity-30"
-              title="Redo (Ctrl+Shift+Z)"
+              aria-label="Redo (Ctrl+Shift+Z)"
             >
-              <Redo2 size={16} />
+              <Redo2 size={16} aria-hidden="true" />
             </Button>
           </div>
         </div>
@@ -576,7 +577,7 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
           comboCounts={comboCounts}
         />
 
-        <main className="flex-1 bg-[#0b1019] flex flex-col items-center justify-center p-4 md:p-6">
+        <main id="main-content" className="flex-1 bg-[#0b1019] flex flex-col items-center justify-center p-4 md:p-6" tabIndex={-1}>
           <div className="w-full max-w-[560px] flex flex-col gap-3">
             <PokerGrid
               labels={rangeData.labels}

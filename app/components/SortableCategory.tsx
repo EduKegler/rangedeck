@@ -90,7 +90,7 @@ function SortableCategory({
               <Trash2 size={16} />
             </button>
           </div>
-          <span className="px-2 py-0.5 rounded-full bg-slate-800 text-xs font-medium text-slate-400 font-mono-nums">
+          <span className="px-2 py-0.5 rounded-full bg-slate-800 text-xs font-medium text-slate-300 font-mono-nums">
             {rangeCount} Ranges
           </span>
         </div>

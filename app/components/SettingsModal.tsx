@@ -120,7 +120,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               <div className="flex items-center justify-between p-4 bg-[#111822] rounded-lg border border-slate-700/50">
                 <div className="flex flex-col gap-1">
                   <span className="text-white text-sm font-medium">Card Size</span>
-                  <span className="text-slate-400 text-xs">Size of range cards on dashboard</span>
+                  <span className="text-slate-300 text-xs">Size of range cards on dashboard</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <button
@@ -146,7 +146,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               <div className="flex items-center justify-between p-4 bg-[#111822] rounded-lg border border-slate-700/50">
                 <div className="flex flex-col gap-1">
                   <span className="text-white text-sm font-medium">Grid Text Size</span>
-                  <span className="text-slate-400 text-xs">Hand names size in range cards</span>
+                  <span className="text-slate-300 text-xs">Hand names size in range cards</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <button
@@ -170,7 +170,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               </div>
 
               <div className="p-4 bg-[#111822] rounded-lg border border-slate-700/50">
-                <span className="text-slate-400 text-xs uppercase tracking-wider mb-3 block">Preview</span>
+                <span className="text-slate-300 text-xs uppercase tracking-wider mb-3 block">Preview</span>
                 <div 
                   className="bg-[#1f2937] rounded-lg p-3 border border-slate-700/50 transition-all"
                   style={{ width: `${Math.min(localSettings.cardSize * 0.4, 180)}px` }}

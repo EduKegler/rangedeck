@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { Plus, Upload, Download, Spade, Settings } from 'lucide-react';
 import {
   trackRangeExported,
@@ -23,7 +23,6 @@ import {
   KeyboardSensor,
   PointerSensor,
   useSensor,
-  useSensors,
   type DragStartEvent,
   type DragEndEvent,
   type DragOverEvent,
@@ -38,13 +37,23 @@ import SortableRangeCard from './SortableRangeCard';
 import SortableCategory from './SortableCategory';
 import RangeCard from './RangeCard';
 import DroppableZone from './DroppableZone';
-import CategoryModal from './CategoryModal';
-import RangeCreateModal from './RangeCreateModal';
-import ConfirmModal from './ConfirmModal';
-import SettingsModal from './SettingsModal';
 import Footer from './Footer';
 import { useRangesStore } from '../stores/rangesStore';
 import { useToastStore } from '../stores/toastStore';
+
+// Lazy load modals to reduce initial bundle size
+const CategoryModal = dynamic(() => import('./CategoryModal'), {
+  ssr: false,
+});
+const RangeCreateModal = dynamic(() => import('./RangeCreateModal'), {
+  ssr: false,
+});
+const ConfirmModal = dynamic(() => import('./ConfirmModal'), {
+  ssr: false,
+});
+const SettingsModal = dynamic(() => import('./SettingsModal'), {
+  ssr: false,
+});
 
 function SkeletonCard() {
   return (
@@ -116,15 +125,18 @@ export default function RangeList() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overCategoryId, setOverCategoryId] = useState<string | null>(null);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+  const sensors = useMemo(
+    () => [
+      useSensor(PointerSensor, {
+        activationConstraint: {
+          distance: 8,
+        },
+      }),
+      useSensor(KeyboardSensor, {
+        coordinateGetter: sortableKeyboardCoordinates,
+      }),
+    ],
+    []
   );
 
   const rangesByCategory = useMemo(() => {
@@ -411,7 +423,7 @@ export default function RangeList() {
     <div className="min-h-screen bg-[#111827] flex flex-col">
       <header className="h-16 flex items-center justify-between border-b border-slate-800 bg-[#111827] px-6 z-20">
         <div className="flex items-center">
-          <Image src="/logo.svg" alt="RangeDeck" width={180} height={20} priority fetchPriority="high" />
+          <img src="/logo.svg" alt="RangeDeck" width="180" height="20" />
         </div>
         <div className="flex items-center gap-3">
           <label className="hidden md:flex items-center justify-center h-9 px-4 rounded border border-slate-700 hover:bg-slate-800 text-sm font-medium transition-colors cursor-pointer text-white">
@@ -451,17 +463,17 @@ export default function RangeList() {
             New Category
           </button>
           <div className="h-8 w-px bg-slate-700 mx-1" />
-          <button 
+          <button
             onClick={() => setShowSettings(true)}
             className="size-9 rounded-lg bg-slate-800 flex items-center justify-center hover:bg-slate-700 transition-colors"
-            title="Settings"
+            aria-label="Open settings"
           >
-            <Settings size={18} className="text-slate-400" />
+            <Settings size={18} className="text-slate-400" aria-hidden="true" />
           </button>
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-4 md:px-4">
+      <main id="main-content" className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-4 md:px-4" tabIndex={-1}>
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -641,7 +653,7 @@ export default function RangeList() {
                     <Spade size={20} />
                   </div>
                   <span className="text-white font-bold">{activeCategoryData.name}</span>
-                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-xs font-medium text-slate-400">
+                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-xs font-medium text-slate-300">
                     {rangesByCategory[activeCategoryData.id]?.length || 0} Ranges
                   </span>
                 </div>
@@ -654,11 +666,12 @@ export default function RangeList() {
       <Footer />
 
       <div className="fixed bottom-6 right-6 md:hidden">
-        <button 
+        <button
           onClick={() => setEditingCategory({ id: '', name: '' })}
           className="size-14 bg-[#3b82f6] text-white rounded-full shadow-lg flex items-center justify-center"
+          aria-label="Create new category"
         >
-          <Plus size={24} />
+          <Plus size={24} aria-hidden="true" />
         </button>
       </div>
 

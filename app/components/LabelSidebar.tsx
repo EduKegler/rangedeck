@@ -216,17 +216,17 @@ export default function LabelSidebar({
                   <button
                     onClick={(e) => { e.stopPropagation(); handleEditLabel(label); }}
                     className="text-[#90a7cb] hover:text-white p-1.5 rounded hover:bg-white/10"
-                    title="Edit"
+                    aria-label={`Edit ${label.name} label`}
                   >
-                    <Pencil size={14} />
+                    <Pencil size={14} aria-hidden="true" />
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); handleDeleteLabelClick(label); }}
                     disabled={labels.length === 1}
                     className="text-[#90a7cb] hover:text-red-400 p-1.5 rounded hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
-                    title={labels.length === 1 ? "Cannot delete last label" : "Delete"}
+                    aria-label={labels.length === 1 ? "Cannot delete last label" : `Delete ${label.name} label`}
                   >
-                    <Trash2 size={14} />
+                    <Trash2 size={14} aria-hidden="true" />
                   </button>
                 </div>
               </div>
