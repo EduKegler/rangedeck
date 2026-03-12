@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# RangeDeck
+
+A free poker range builder for creating, visualizing, and studying Texas Hold'em starting hand ranges.
+
+**[Open RangeDeck →](https://rangedeck.kegler.dev)**
+
+## About
+
+RangeDeck is a 100% client-side web app — no backend, no sign-up, no data leaves your browser. Ranges are saved to localStorage and settings to cookies, so everything persists across sessions.
+
+## Features
+
+- **13×13 Interactive Grid** — all 169 starting hands with combo counts (pairs=6, suited=4, offsuit=12)
+- **Labels** — color-code hands with up to 6 labels per range
+- **Categories** — organize ranges into groups (Opens, Responses, Blinds, 3Bet, or custom)
+- **Drag & Drop** — reorder ranges, categories, and labels
+- **Export/Import** — share ranges as compressed JSON files
+- **Undo/Redo** — full history stack for hand edits
+- **Dark Mode** — automatic detection with manual toggle
+- **Auto-Save** — all changes persist instantly to localStorage
+
+## Tech Stack
+
+- [Next.js 16](https://nextjs.org/) (App Router, React 19, React Compiler)
+- [TypeScript](https://www.typescriptlang.org/) (strict mode)
+- [Tailwind CSS 4](https://tailwindcss.com/)
+- [HeroUI v2](https://www.heroui.com/) (component library)
+- [Zustand 5](https://zustand.docs.pmnd.rs/) (state management)
+- [@dnd-kit](https://dndkit.com/) (drag and drop)
+- [Motion](https://motion.dev/) (animations)
+- [Lucide React](https://lucide.dev/) (icons)
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to see the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Commands
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Command      | Description      |
+| ------------ | ---------------- |
+| `pnpm dev`   | Start dev server |
+| `pnpm build` | Production build |
+| `pnpm lint`  | Run ESLint       |

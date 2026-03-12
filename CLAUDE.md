@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-RangeDeck is a free poker range builder web app for creating, visualizing, and studying Texas Hold'em hand ranges. Fully client-side — no backend, no database. Data persists in localStorage, settings in cookies. Deployed at rangedeck.app.
+RangeDeck is a free poker range builder web app for creating, visualizing, and studying Texas Hold'em hand ranges. Fully client-side — no backend, no database. Data persists in localStorage, settings in cookies. Deployed at rangedeck.kegler.dev.
 
 ## Commands
 
