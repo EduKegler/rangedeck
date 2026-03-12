@@ -15,7 +15,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="border-t border-slate-800 bg-[#111827] px-6 py-3">
+    <footer className="border-t border-white/5 bg-[#0c1220] px-6 py-3">
       <div className="max-w-[1800px] mx-auto flex flex-col md:flex-row items-center justify-between gap-3 text-sm">
         <div className="flex items-center gap-2 text-slate-400">
           <span>Made with</span>

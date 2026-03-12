@@ -17,7 +17,7 @@ export default function PokerGridPreview({ labels, hands, showHandNames = false 
   return (
     <div className="w-full h-full">
       <div 
-        className="w-full h-full grid gap-px bg-[#1e293b] p-px"
+        className="w-full h-full grid gap-px bg-[#0c1220] p-px rounded-lg"
         style={{ gridTemplateColumns: 'repeat(13, minmax(0, 1fr))' }}
       >
         {RANKS.map((_, rowIdx) =>
@@ -30,9 +30,12 @@ export default function PokerGridPreview({ labels, hands, showHandNames = false 
               <div
                 key={`${rowIdx}-${colIdx}`}
                 className={`aspect-square flex items-center justify-center ${
-                  label ? '' : 'bg-[#334155]'
+                  label ? '' : 'bg-[#1a2332]'
                 }`}
-                style={label ? { backgroundColor: label.color } : undefined}
+                style={label ? {
+                  backgroundColor: label.color,
+                  boxShadow: `0 0 8px ${label.color}59`,
+                } : undefined}
                 title={label ? `${hand} - ${label.name}` : hand}
               >
                 {showHandNames && (

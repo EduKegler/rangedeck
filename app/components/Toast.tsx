@@ -51,10 +51,17 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
     info: 'border-blue-500/30',
   };
 
+  const glows = {
+    success: '0 0 15px rgba(16,185,129,0.1)',
+    error: '0 0 15px rgba(239,68,68,0.1)',
+    warning: '0 0 15px rgba(245,158,11,0.1)',
+    info: '0 0 15px rgba(59,130,246,0.1)',
+  };
+
   return (
-    <div 
-      className={`flex items-center gap-3 px-4 py-3 bg-[#1a2332] border ${borders[toast.type]} rounded-lg shadow-xl min-w-[280px] max-w-[400px]`}
-      style={{ animation: 'slideIn 0.3s ease-out' }}
+    <div
+      className={`flex items-center gap-3 px-4 py-3 bg-[#111827] border ${borders[toast.type]} rounded-xl shadow-xl min-w-[280px] max-w-[400px]`}
+      style={{ animation: 'slideIn 0.3s ease-out', boxShadow: `0 8px 30px rgba(0,0,0,0.4), ${glows[toast.type]}` }}
     >
       <div className="shrink-0">{icons[toast.type]}</div>
       <p className="text-sm text-white flex-1">{toast.message}</p>

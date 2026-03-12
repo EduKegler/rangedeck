@@ -5,6 +5,7 @@ import { Trash2, GripVertical, Pencil } from 'lucide-react';
 import type { RangeData } from '../types/range';
 import PokerGridPreview from './PokerGridPreview';
 import { calculateTotalCombos, getHandCombos } from '../utils/pokerHands';
+import Button from './button';
 
 interface RangeCardProps {
   name: string;
@@ -71,7 +72,7 @@ export default function RangeCard({ name, rangeData, onClick, onDelete, onRename
   return (
     <div 
       onClick={onClick}
-      className="range-card flex-none snap-start gap-2 bg-[#1f2937] rounded-xl border border-slate-700 p-4 shadow-sm hover:border-[#3b82f6]/50 hover:shadow-md group/card relative flex flex-col cursor-pointer"
+      className="range-card flex-none snap-start gap-2 bg-[#111827] rounded-[14px] border border-white/6 p-4 shadow-sm glow-border-hover group/card relative flex flex-col cursor-pointer transition-all"
     >
       <div className="flex items-center gap-2 h-7">
         <div className="text-slate-500 cursor-grab active:cursor-grabbing shrink-0">
@@ -105,13 +106,16 @@ export default function RangeCard({ name, rangeData, onClick, onDelete, onRename
         )}
         <span className="text-xs font-mono-nums text-slate-300 shrink-0">{frequency}%</span>
         {onDelete && (
-          <button
+          <Button
+            variant="ghost"
+            size="xs"
+            iconOnly
             onClick={(e) => { e.stopPropagation(); onDelete(e); }}
-            className="size-6 flex items-center justify-center rounded text-slate-400 hover:text-red-500 transition-colors shrink-0"
+            className="text-slate-400 hover:text-red-500 shrink-0"
             aria-label="Delete range"
           >
             <Trash2 size={16} aria-hidden="true" />
-          </button>
+          </Button>
         )}
       </div>
 
@@ -125,11 +129,11 @@ export default function RangeCard({ name, rangeData, onClick, onDelete, onRename
             labelStats.map(({ label, percentage }) => (
               <div 
                 key={label.id}
-                className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-800/80 border border-slate-700/50"
+                className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-white/5 border border-white/6"
               >
-                <div 
+                <div
                   className="size-2.5 rounded-full shrink-0"
-                  style={{ backgroundColor: label.color }}
+                  style={{ backgroundColor: label.color, boxShadow: `0 0 6px ${label.color}88` }}
                 />
                 <span className="text-[10px] font-medium text-slate-300 truncate max-w-[60px]">
                   {label.name}
@@ -140,12 +144,12 @@ export default function RangeCard({ name, rangeData, onClick, onDelete, onRename
               </div>
             ))
           ) : defaultLabel ? (
-            <div 
-              className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-800/80 border border-slate-700/50"
+            <div
+              className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-white/5 border border-white/6"
             >
-              <div 
+              <div
                 className="size-2.5 rounded-full shrink-0"
-                style={{ backgroundColor: defaultLabel.color }}
+                style={{ backgroundColor: defaultLabel.color, boxShadow: `0 0 6px ${defaultLabel.color}88` }}
               />
               <span className="text-[10px] font-medium text-slate-300 truncate max-w-[60px]">
                 {defaultLabel.name}

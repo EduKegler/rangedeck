@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { X, AlertCircle } from 'lucide-react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { trackRangeCreated } from '@/lib/analytics';
+import Button from './button';
 
 interface RangeCreateModalProps {
   categoryId: string;
@@ -50,17 +51,13 @@ export default function RangeCreateModal({ categoryId, categoryName, onSave, onC
           role="dialog"
           aria-modal="true"
           aria-labelledby="range-create-modal-title"
-          className="w-full max-w-[480px] bg-[#1a2332] border border-slate-700/60 rounded-xl shadow-2xl overflow-hidden"
+          className="w-full max-w-[480px] bg-[#111827] border border-white/8 rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.5),0_0_20px_rgba(59,130,246,0.05)] overflow-hidden"
         >
-          <div className="flex items-center justify-between px-6 py-5 border-b border-slate-700/50">
+          <div className="flex items-center justify-between px-6 py-5 border-b border-white/6">
             <h2 id="range-create-modal-title" className="text-xl font-bold text-white tracking-tight">New Range</h2>
-            <button
-              onClick={onClose}
-              className="text-slate-400 hover:text-white transition-colors p-1 rounded-full hover:bg-white/5"
-              aria-label="Close dialog"
-            >
+            <Button variant="ghost" size="sm" iconOnly className="rounded-full" onClick={onClose} aria-label="Close dialog">
               <X size={24} aria-hidden="true" />
-            </button>
+            </Button>
           </div>
           <div className="p-6 flex flex-col gap-6">
             <label htmlFor="range-name-input" className="flex flex-col gap-2">
@@ -71,10 +68,10 @@ export default function RangeCreateModal({ categoryId, categoryName, onSave, onC
                 value={name}
                 onChange={(e) => handleChange(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSave()}
-                className={`w-full bg-[#111822] border rounded-lg h-12 px-4 text-white placeholder:text-slate-500 focus:outline-none transition-all text-sm ${
+                className={`w-full bg-[#0c1220] border rounded-lg h-12 px-4 text-white placeholder:text-slate-500 focus:outline-none transition-all text-sm ${
                   error
                     ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500'
-                    : 'border-slate-700 focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]'
+                    : 'border-white/8 focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6] focus:shadow-[0_0_12px_rgba(59,130,246,0.15)]'
                 }`}
                 placeholder="e.g., RFI 2.5x from UTG"
                 aria-invalid={!!error}
@@ -89,19 +86,13 @@ export default function RangeCreateModal({ categoryId, categoryName, onSave, onC
               )}
             </label>
           </div>
-          <div className="px-6 py-4 bg-[#151c28] border-t border-slate-700/50 flex justify-end gap-3">
-            <button 
-              onClick={onClose}
-              className="px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-colors"
-            >
+          <div className="px-6 py-4 bg-[#0c1220] border-t border-white/6 flex justify-end gap-3">
+            <Button variant="ghost" onClick={onClose}>
               Cancel
-            </button>
-            <button 
-              onClick={handleSave}
-              className="px-4 py-2 rounded-lg text-sm font-bold text-white bg-[#3b82f6] hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/20"
-            >
+            </Button>
+            <Button variant="primary" onClick={handleSave}>
               Save Range
-            </button>
+            </Button>
           </div>
         </div>
       </div>

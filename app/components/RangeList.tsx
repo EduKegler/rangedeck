@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Plus, Upload, Download, Spade, Settings } from 'lucide-react';
+import Button, { buttonVariants } from './button';
 import {
   trackRangeExported,
   trackRangeImported,
@@ -57,16 +58,16 @@ const SettingsModal = dynamic(() => import('./SettingsModal'), {
 
 function SkeletonCard() {
   return (
-    <div className="flex-none snap-start bg-[#1f2937] rounded-xl border border-slate-700 p-4 shadow-sm flex flex-col animate-pulse"
+    <div className="flex-none snap-start bg-[#111827] rounded-[14px] border border-white/6 p-4 shadow-sm flex flex-col animate-pulse"
       style={{ width: 'var(--settings-card-size, 400px)', minHeight: '320px' }}>
       <div className="flex justify-between items-center mb-3">
-        <div className="h-5 bg-slate-700 rounded w-24"></div>
-        <div className="h-4 bg-slate-700 rounded w-12"></div>
+        <div className="h-5 bg-white/5 rounded w-24"></div>
+        <div className="h-4 bg-white/5 rounded w-12"></div>
       </div>
-      <div className="aspect-square w-full bg-slate-800 rounded mb-3"></div>
+      <div className="aspect-square w-full bg-white/3 rounded mb-3"></div>
       <div className="mt-auto flex flex-col gap-2">
-        <div className="h-3 bg-slate-700 rounded w-full"></div>
-        <div className="h-6 bg-slate-700 rounded w-full"></div>
+        <div className="h-3 bg-white/5 rounded w-full"></div>
+        <div className="h-6 bg-white/5 rounded w-full"></div>
       </div>
     </div>
   );
@@ -77,8 +78,8 @@ function SkeletonCategory() {
     <section className="flex flex-col gap-2 animate-pulse">
       <div className="flex items-center justify-between p-2 -ml-2">
         <div className="flex items-center gap-3">
-          <div className="h-6 bg-slate-700 rounded w-32"></div>
-          <div className="h-5 bg-slate-800 rounded-full w-16"></div>
+          <div className="h-6 bg-white/5 rounded w-32"></div>
+          <div className="h-5 bg-white/3 rounded-full w-16"></div>
         </div>
       </div>
       <div className="flex overflow-x-auto gap-4 pb-4 -mx-2 px-2 scrollbar-hide snap-x items-stretch">
@@ -394,22 +395,22 @@ export default function RangeList() {
 
   if (!hasHydrated) {
     return (
-      <div className="min-h-screen bg-[#111827] flex flex-col">
-        <header className="h-16 flex items-center justify-between border-b border-slate-800 bg-[#111827] px-6 z-20">
+      <div className="min-h-screen bg-[#0c1220] flex flex-col">
+        <header className="mx-3 mt-3 rounded-[14px] border border-blue-500/12 bg-[#111827]/80 backdrop-blur-xl shadow-[0_4px_20px_rgba(0,0,0,0.3),0_0_15px_rgba(59,130,246,0.04)] h-16 flex items-center justify-between px-6 z-20">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-slate-700 rounded animate-pulse"></div>
-            <div className="h-6 bg-slate-700 rounded w-28 animate-pulse"></div>
+            <div className="w-8 h-8 bg-white/5 rounded animate-pulse"></div>
+            <div className="h-6 bg-white/5 rounded w-28 animate-pulse"></div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="h-9 bg-slate-700 rounded w-24 animate-pulse hidden md:block"></div>
-            <div className="h-9 bg-slate-700 rounded w-24 animate-pulse hidden md:block"></div>
-            <div className="h-9 bg-slate-700 rounded w-32 animate-pulse"></div>
+            <div className="h-9 bg-white/5 rounded w-24 animate-pulse hidden md:block"></div>
+            <div className="h-9 bg-white/5 rounded w-24 animate-pulse hidden md:block"></div>
+            <div className="h-9 bg-white/5 rounded w-32 animate-pulse"></div>
           </div>
         </header>
         <main className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-4 md:px-4">
           <div className="max-w-[1800px] mx-auto flex flex-col gap-6 pb-6">
             <SkeletonCategory />
-            <div className="h-px w-full bg-slate-800"></div>
+            <div className="h-px w-full bg-white/5"></div>
             <SkeletonCategory />
           </div>
         </main>
@@ -420,14 +421,14 @@ export default function RangeList() {
   const categoryIds = categories.map(c => `${CATEGORY_PREFIX}${c.id}`);
 
   return (
-    <div className="min-h-screen bg-[#111827] flex flex-col">
-      <header className="h-16 flex items-center justify-between border-b border-slate-800 bg-[#111827] px-6 z-20">
+    <div className="min-h-screen bg-[#0c1220] flex flex-col">
+      <header className="mx-3 mt-3 rounded-[14px] border border-blue-500/12 bg-[#111827]/80 backdrop-blur-xl shadow-[0_4px_20px_rgba(0,0,0,0.3),0_0_15px_rgba(59,130,246,0.04)] h-16 flex items-center justify-between px-6 z-20">
         <div className="flex items-center">
           <img src="/logo.svg" alt="RangeDeck" width="180" height="20" />
         </div>
         <div className="flex items-center gap-3">
-          <label className="hidden md:flex items-center justify-center h-9 px-4 rounded border border-slate-700 hover:bg-slate-800 text-sm font-medium transition-colors cursor-pointer text-white">
-            <Upload size={16} className="mr-2" />
+          <label className={buttonVariants({ variant: 'secondary' }) + ' hidden md:flex cursor-pointer'}>
+            <Upload size={16} />
             Import JSON
             <input
               type="file"
@@ -436,7 +437,9 @@ export default function RangeList() {
               className="hidden"
             />
           </label>
-          <button
+          <Button
+            variant="secondary"
+            className="hidden md:flex"
             onClick={() => {
               exportToJSON();
 
@@ -450,26 +453,18 @@ export default function RangeList() {
                 custom_ranges_count: customRangesCount,
               });
             }}
-            className="hidden md:flex items-center justify-center h-9 px-4 rounded border border-slate-700 hover:bg-slate-800 text-sm font-medium transition-colors text-white"
           >
-            <Download size={16} className="mr-2" />
+            <Download size={16} />
             Export JSON
-          </button>
-          <button 
-            onClick={() => setEditingCategory({ id: '', name: '' })}
-            className="flex items-center justify-center h-9 px-4 rounded bg-[#2563eb] hover:bg-blue-700 text-white text-sm font-bold shadow-sm transition-colors"
-          >
-            <Plus size={16} className="mr-2" />
+          </Button>
+          <Button variant="primary" onClick={() => setEditingCategory({ id: '', name: '' })}>
+            <Plus size={16} />
             New Category
-          </button>
-          <div className="h-8 w-px bg-slate-700 mx-1" />
-          <button
-            onClick={() => setShowSettings(true)}
-            className="size-9 rounded-lg bg-slate-800 flex items-center justify-center hover:bg-slate-700 transition-colors"
-            aria-label="Open settings"
-          >
+          </Button>
+          <div className="h-8 w-px bg-white/8 mx-1" />
+          <Button variant="secondary" iconOnly onClick={() => setShowSettings(true)} aria-label="Open settings">
             <Settings size={18} className="text-slate-400" aria-hidden="true" />
-          </button>
+          </Button>
         </div>
       </header>
 
@@ -525,7 +520,7 @@ export default function RangeList() {
                               className={`range-card-placeholder flex-none snap-start flex flex-col items-center justify-center bg-transparent rounded-xl border-2 border-dashed transition-all ${
                                 isDropTarget && activeId && !isCategory(activeId) && rangeDefinitions.find(r => r.id === activeId)?.categoryId !== category.id
                                   ? 'border-[#3b82f6] bg-[#3b82f6]/10 scale-105'
-                                  : 'border-slate-700 hover:border-[#3b82f6] hover:bg-slate-800/50 cursor-pointer'
+                                  : 'border-white/8 hover:border-blue-500/30 hover:bg-white/3 cursor-pointer'
                               }`}
                             >
                               <div 
@@ -541,7 +536,7 @@ export default function RangeList() {
                                   </>
                                 ) : (
                                   <>
-                                    <div className="size-12 rounded-full bg-slate-800 flex items-center justify-center mb-3 group-hover:bg-[#3b82f6]/20 transition-colors">
+                                    <div className="size-12 rounded-full bg-white/5 flex items-center justify-center mb-3 group-hover:bg-[#3b82f6]/20 transition-colors">
                                       <Plus size={24} className="text-slate-400 group-hover:text-[#3b82f6]" />
                                     </div>
                                     <span className="text-sm font-semibold text-slate-400 group-hover:text-[#3b82f6]">Add Range</span>
@@ -555,14 +550,14 @@ export default function RangeList() {
                       ) : (
                         <DroppableZone
                           id={`category-drop-${category.id}`}
-                          className={`flex flex-col items-center justify-center py-10 bg-slate-900/30 rounded-xl border border-dashed transition-all ${
+                          className={`flex flex-col items-center justify-center py-10 bg-white/2 rounded-xl border border-dashed transition-all ${
                             isDropTarget && activeId && !isCategory(activeId)
-                              ? 'border-[#3b82f6] bg-[#3b82f6]/10 ring-2 ring-[#3b82f6] scale-[1.02]' 
-                              : 'border-slate-700'
+                              ? 'border-[#3b82f6] bg-[#3b82f6]/10 ring-2 ring-[#3b82f6] scale-[1.02]'
+                              : 'border-white/8'
                           }`}
                         >
                           <div className={`p-3 rounded-full mb-3 transition-colors ${
-                            isDropTarget && activeId && !isCategory(activeId) ? 'bg-[#3b82f6]/20' : 'bg-slate-800'
+                            isDropTarget && activeId && !isCategory(activeId) ? 'bg-[#3b82f6]/20' : 'bg-white/5'
                           }`}>
                             <Spade size={24} className={`transition-colors ${
                               isDropTarget && activeId && !isCategory(activeId) ? 'text-[#3b82f6]' : 'text-slate-400'
@@ -580,17 +575,14 @@ export default function RangeList() {
                               ? 'Release to move range to this category' 
                               : 'Start by adding your first range or drag one here'}
                           </p>
-                          <button
+                          <Button
+                            variant="secondary"
                             onClick={() => setRangeModalState({ categoryId: category.id, categoryName: category.name })}
-                            className={`flex items-center gap-2 px-4 py-2 rounded text-sm font-medium text-white transition-colors ${
-                              isDropTarget && activeId && !isCategory(activeId)
-                                ? 'bg-[#3b82f6]/30 pointer-events-none' 
-                                : 'bg-slate-700 hover:bg-slate-600'
-                            }`}
+                            className={isDropTarget && activeId && !isCategory(activeId) ? 'bg-[#3b82f6]/30 pointer-events-none' : ''}
                           >
                             <Plus size={16} />
                             Add Range
-                          </button>
+                          </Button>
                         </DroppableZone>
                       )}
                     </SortableContext>
@@ -600,18 +592,15 @@ export default function RangeList() {
 
               {categories.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-20">
-                  <div className="bg-slate-800 p-4 rounded-full mb-4">
+                  <div className="bg-white/5 p-4 rounded-full mb-4">
                     <Spade size={32} className="text-slate-400" />
                   </div>
                   <h2 className="text-xl font-bold text-white mb-2">No categories yet</h2>
                   <p className="text-slate-400 mb-6">Create your first category to start organizing your poker ranges</p>
-                  <button 
-                    onClick={() => setEditingCategory({ id: '', name: '' })}
-                    className="flex items-center gap-2 px-6 py-3 bg-[#2563eb] hover:bg-blue-700 rounded-lg text-white font-bold transition-colors"
-                  >
+                  <Button variant="primary" size="lg" onClick={() => setEditingCategory({ id: '', name: '' })}>
                     <Plus size={20} />
                     New Category
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
@@ -640,8 +629,8 @@ export default function RangeList() {
               </div>
             )}
             {activeCategoryData && (
-              <div 
-                className="bg-slate-900/95 rounded-lg px-4 py-3 shadow-2xl shadow-black/50 border border-[#3b82f6]"
+              <div
+                className="bg-[#0c1220]/95 rounded-lg px-4 py-3 shadow-2xl shadow-black/50 border border-[#3b82f6]"
                 style={{
                   transform: 'rotate(2deg) scale(1.02)',
                   opacity: 0.95,
@@ -653,7 +642,7 @@ export default function RangeList() {
                     <Spade size={20} />
                   </div>
                   <span className="text-white font-bold">{activeCategoryData.name}</span>
-                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-xs font-medium text-slate-300">
+                  <span className="px-2 py-0.5 rounded-full bg-white/5 text-xs font-medium text-slate-300">
                     {rangesByCategory[activeCategoryData.id]?.length || 0} Ranges
                   </span>
                 </div>

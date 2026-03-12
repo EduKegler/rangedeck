@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Input } from '@heroui/react';
+import { Input } from '@heroui/react';
 import { ArrowLeft, Pencil, Check, X, Undo2, Redo2 } from 'lucide-react';
+import Button from './button';
 import PokerGrid from './PokerGrid';
 import LabelSidebar from './LabelSidebar';
 import LabelModal from './LabelModal';
@@ -442,27 +443,27 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
 
   if (!hasHydrated) {
     return (
-      <div className="h-screen flex flex-col overflow-hidden bg-[#101722]">
-        <header className="h-16 shrink-0 border-b border-[#223149] flex items-center justify-between px-6 bg-[#162030]/50">
+      <div className="h-screen flex flex-col overflow-hidden bg-[#0c1220]">
+        <header className="mx-3 mt-3 rounded-[14px] border border-blue-500/12 bg-[#111827]/80 backdrop-blur-xl shadow-[0_4px_20px_rgba(0,0,0,0.3),0_0_15px_rgba(59,130,246,0.04)] h-16 shrink-0 flex items-center justify-between px-6 z-10">
           <div className="flex items-center gap-6">
-            <div className="w-24 h-9 bg-[#223149] rounded-lg animate-pulse"></div>
-            <div className="border-l border-[#223149] pl-6">
-              <div className="w-40 h-6 bg-[#223149] rounded animate-pulse"></div>
+            <div className="w-24 h-9 bg-white/5 rounded-lg animate-pulse"></div>
+            <div className="border-l border-white/8 pl-6">
+              <div className="w-40 h-6 bg-white/5 rounded animate-pulse"></div>
             </div>
           </div>
         </header>
         <div className="flex flex-1 overflow-hidden">
-          <aside className="w-72 border-r border-[#223149] bg-[#162030]/30 p-4 flex flex-col gap-4">
-            <div className="h-10 bg-[#223149] rounded-lg animate-pulse"></div>
+          <aside className="w-72 border-r border-blue-500/8 bg-[#0e1525] p-4 flex flex-col gap-4">
+            <div className="h-10 bg-white/5 rounded-lg animate-pulse"></div>
             <div className="flex-1 flex flex-col gap-2">
               {[1, 2, 3].map(i => (
-                <div key={i} className="h-14 bg-[#223149] rounded-lg animate-pulse"></div>
+                <div key={i} className="h-14 bg-white/5 rounded-lg animate-pulse"></div>
               ))}
             </div>
           </aside>
-          <main className="flex-1 bg-[#0b1019] flex flex-col items-center justify-center p-6">
+          <main className="flex-1 bg-[#080d18] flex flex-col items-center justify-center p-6">
             <div className="w-full max-w-[560px]">
-              <div className="aspect-square w-full bg-[#162030] rounded-lg animate-pulse"></div>
+              <div className="aspect-square w-full bg-white/3 rounded-lg animate-pulse"></div>
             </div>
           </main>
         </div>
@@ -471,19 +472,15 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
   }
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-[#101722]">
-      <header className="h-16 shrink-0 border-b border-[#223149] flex items-center justify-between px-6 bg-[#162030]/50 backdrop-blur-sm z-10">
+    <div className="h-screen flex flex-col overflow-hidden bg-[#0c1220]">
+      <header className="mx-3 mt-3 rounded-[14px] border border-blue-500/12 bg-[#111827]/80 backdrop-blur-xl shadow-[0_4px_20px_rgba(0,0,0,0.3),0_0_15px_rgba(59,130,246,0.04)] h-16 shrink-0 flex items-center justify-between px-6 z-10">
         <div className="flex items-center gap-6">
-          <Button
-            variant="flat"
-            className="bg-[#223149] hover:bg-[#223149]/80 text-white gap-2 font-bold rounded-lg"
-            onPress={handleBack}
-          >
+          <Button variant="secondary" onClick={handleBack} className="font-bold">
             <ArrowLeft size={18} />
             <span className="hidden sm:inline">Dashboard</span>
           </Button>
           
-          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 border-l border-[#223149] pl-6">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 border-l border-white/8 pl-6">
             {isEditingName ? (
               <div className="flex items-center gap-2">
                 <Input
@@ -501,10 +498,10 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
                   }}
                   autoFocus
                 />
-                <Button size="sm" color="primary" isIconOnly onPress={handleSaveName} aria-label="Save range name">
+                <Button variant="primary" size="sm" iconOnly onClick={handleSaveName} aria-label="Save range name">
                   <Check size={16} aria-hidden="true" />
                 </Button>
-                <Button size="sm" variant="flat" isIconOnly onPress={handleCancelEditName} aria-label="Cancel editing">
+                <Button variant="ghost" size="sm" iconOnly onClick={handleCancelEditName} aria-label="Cancel editing">
                   <X size={16} aria-hidden="true" />
                 </Button>
               </div>
@@ -531,33 +528,17 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
         <div className="flex items-center gap-4">
           <div className="hidden md:flex items-center gap-2 text-[#90a7cb] text-sm">
             <span>Total Combos: <strong className="text-white font-mono-nums">{totalCombos}</strong></span>
-            <span className="w-1 h-1 rounded-full bg-[#223149]"></span>
+            <span className="w-1 h-1 rounded-full bg-white/10"></span>
             <span>Freq: <strong className="text-white font-mono-nums">{frequency}%</strong></span>
           </div>
           
-          <div className="h-6 w-px bg-[#223149] hidden md:block" />
+          <div className="h-6 w-px bg-white/8 hidden md:block" />
           
           <div className="flex items-center gap-1">
-            <Button
-              size="sm"
-              variant="flat"
-              isIconOnly
-              isDisabled={!canUndo}
-              onPress={handleUndo}
-              className="bg-[#223149] hover:bg-[#223149]/80 text-white disabled:opacity-30"
-              aria-label="Undo (Ctrl+Z)"
-            >
+            <Button variant="secondary" size="sm" iconOnly disabled={!canUndo} onClick={handleUndo} aria-label="Undo (Ctrl+Z)">
               <Undo2 size={16} aria-hidden="true" />
             </Button>
-            <Button
-              size="sm"
-              variant="flat"
-              isIconOnly
-              isDisabled={!canRedo}
-              onPress={handleRedo}
-              className="bg-[#223149] hover:bg-[#223149]/80 text-white disabled:opacity-30"
-              aria-label="Redo (Ctrl+Shift+Z)"
-            >
+            <Button variant="secondary" size="sm" iconOnly disabled={!canRedo} onClick={handleRedo} aria-label="Redo (Ctrl+Shift+Z)">
               <Redo2 size={16} aria-hidden="true" />
             </Button>
           </div>
@@ -577,7 +558,7 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
           comboCounts={comboCounts}
         />
 
-        <main id="main-content" className="flex-1 bg-[#0b1019] flex flex-col items-center justify-center p-4 md:p-6" tabIndex={-1}>
+        <main id="main-content" className="flex-1 bg-[#080d18] flex flex-col items-center justify-center p-4 md:p-6" tabIndex={-1}>
           <div className="w-full max-w-[560px] flex flex-col gap-3">
             <PokerGrid
               labels={rangeData.labels}
@@ -588,7 +569,7 @@ export default function RangeEditor({ rangeId }: RangeEditorProps) {
             />
 
         
-              <div className="w-full flex flex-wrap items-center justify-center gap-4 text-sm bg-[#162030]/50 p-3 rounded-lg border border-[#223149]">
+              <div className="w-full flex flex-wrap items-center justify-center gap-4 text-sm bg-[#111827]/50 p-3 rounded-lg border border-blue-500/8">
                 {rangeData.labels.map(label => (
                   <div key={label.id} className="flex items-center gap-2">
                     <span 

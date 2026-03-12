@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { X, Check, AlertCircle } from 'lucide-react';
 import type { Label } from '../types/range';
+import Button from './button';
 
 interface LabelModalProps {
   label?: Label;
@@ -63,17 +64,14 @@ export default function LabelModal({ label, onSave, onClose }: LabelModalProps) 
         onClick={onClose}
       />
       <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
-        <div className="w-full max-w-[480px] bg-[#1a2332] border border-slate-700/60 rounded-xl shadow-2xl overflow-hidden">
-          <div className="flex items-center justify-between px-6 py-5 border-b border-slate-700/50">
+        <div className="w-full max-w-[480px] bg-[#111827] border border-white/8 rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.5),0_0_20px_rgba(59,130,246,0.05)] overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-5 border-b border-white/6">
             <h2 className="text-xl font-bold text-white tracking-tight">
               {label ? 'Edit Label' : 'Create Label'}
             </h2>
-            <button 
-              onClick={onClose}
-              className="text-slate-400 hover:text-white transition-colors p-1 rounded-full hover:bg-white/5"
-            >
-              <X size={24} />
-            </button>
+            <Button variant="ghost" size="sm" iconOnly className="rounded-full" onClick={onClose} aria-label="Close dialog">
+              <X size={24} aria-hidden="true" />
+            </Button>
           </div>
           <div className="p-6 flex flex-col gap-6">
             <p className="text-[#90a7cb] text-sm font-normal leading-normal">
@@ -87,10 +85,10 @@ export default function LabelModal({ label, onSave, onClose }: LabelModalProps) 
                 onChange={(e) => handleChange(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSave()}
                 maxLength={20}
-                className={`w-full bg-[#111822] border rounded-lg h-12 px-4 text-white placeholder:text-slate-500 focus:outline-none transition-all text-sm ${
-                  error 
-                    ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500' 
-                    : 'border-slate-700 focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]'
+                className={`w-full bg-[#0c1220] border rounded-lg h-12 px-4 text-white placeholder:text-slate-500 focus:outline-none transition-all text-sm ${
+                  error
+                    ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500'
+                    : 'border-white/8 focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6] focus:shadow-[0_0_12px_rgba(59,130,246,0.15)]'
                 }`}
                 placeholder="e.g., Bluff, Value, Nut flush"
                 autoFocus
@@ -114,12 +112,12 @@ export default function LabelModal({ label, onSave, onClose }: LabelModalProps) 
                   >
                     <div 
                       className={`h-10 w-10 rounded-full transition-all hover:scale-105 ${
-                        color === preset.color ? 'ring-offset-2 ring-offset-[#1a2332]' : ''
+                        color === preset.color ? 'ring-offset-2 ring-offset-[#111827]' : ''
                       }`}
                       style={{ 
                         backgroundColor: preset.color,
                         boxShadow: color === preset.color 
-                          ? `0 0 0 3px #1a2332, 0 0 0 6px ${preset.color}` 
+                          ? `0 0 0 3px #111827, 0 0 0 6px ${preset.color}` 
                           : 'none'
                       }}
                     />
@@ -133,19 +131,13 @@ export default function LabelModal({ label, onSave, onClose }: LabelModalProps) 
               </div>
             </div>
           </div>
-          <div className="px-6 py-4 bg-[#151c28] border-t border-slate-700/50 flex justify-end gap-3">
-            <button 
-              onClick={onClose}
-              className="px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-colors"
-            >
+          <div className="px-6 py-4 bg-[#0c1220] border-t border-white/6 flex justify-end gap-3">
+            <Button variant="ghost" onClick={onClose}>
               Cancel
-            </button>
-            <button 
-              onClick={handleSave}
-              className="px-4 py-2 rounded-lg text-sm font-bold text-white bg-[#3b82f6] hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/20"
-            >
+            </Button>
+            <Button variant="primary" onClick={handleSave}>
               {label ? 'Save Label' : 'Create Label'}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

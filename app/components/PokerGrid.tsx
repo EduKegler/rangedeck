@@ -52,6 +52,7 @@ export default function PokerGrid({ labels, hands, activeLabelId, onPaintHand, o
       if (label) {
         return {
           backgroundColor: label.color,
+          boxShadow: `0 0 10px ${label.color}4D`,
         };
       }
     }
@@ -123,7 +124,7 @@ export default function PokerGrid({ labels, hands, activeLabelId, onPaintHand, o
         aria-label={`Poker hand range grid. ${activeLabelId ? `Paint with ${getActiveLabelName()}. Use arrow keys to navigate, Space or Enter to select.` : 'Select a label to start painting.'}`}
         aria-rowcount={13}
         aria-colcount={13}
-        className="aspect-square w-full grid gap-[3px] bg-[#162030] p-1.5 rounded-md border border-[#223149] shadow-2xl"
+        className="aspect-square w-full grid gap-[3px] bg-[#080d18] p-1.5 rounded-xl border border-blue-500/8 shadow-2xl"
         style={{ gridTemplateColumns: 'repeat(13, minmax(0, 1fr))' }}
         onMouseUp={handleMouseUp}
       >
@@ -151,11 +152,11 @@ export default function PokerGrid({ labels, hands, activeLabelId, onPaintHand, o
                 aria-rowindex={rowIdx + 1}
                 aria-colindex={colIdx + 1}
                 tabIndex={rowIdx === 0 && colIdx === 0 ? 0 : -1}
-                className={`aspect-square flex items-center justify-center text-[10px] sm:text-xs md:text-sm rounded-[2px] transition-all focus:outline-none focus:ring-2 focus:ring-[#3b82f6] focus:ring-offset-2 focus:ring-offset-[#162030] focus:z-10 ${
+                className={`aspect-square flex items-center justify-center text-[10px] sm:text-xs md:text-sm rounded-[3px] transition-all focus:outline-none focus:ring-2 focus:ring-[#3b82f6] focus:ring-offset-2 focus:ring-offset-[#080d18] focus:z-10 ${
                   colored
                     ? 'text-white grid-text'
-                    : 'bg-[#343e4f] text-slate-300 hover:bg-slate-600'
-                } ${activeLabelId ? 'cursor-pointer hover:scale-105' : ''}`}
+                    : 'bg-[#1a2332] text-slate-300 hover:bg-slate-600'
+                } ${activeLabelId ? 'cursor-pointer hover:scale-105 hover:brightness-115' : ''}`}
                 style={getCellStyle(hand)}
                 onMouseDown={() => handleMouseDown(hand)}
                 onMouseEnter={() => handleMouseEnter(hand)}

@@ -2,6 +2,7 @@
 
 import { X, AlertTriangle } from 'lucide-react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import Button from './button';
 
 interface ConfirmModalProps {
   title: string;
@@ -24,11 +25,6 @@ export default function ConfirmModal({
 }: ConfirmModalProps) {
   const modalRef = useFocusTrap(true);
 
-  const buttonColors = {
-    danger: 'bg-red-500 hover:bg-red-600 shadow-red-500/20',
-    warning: 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/20',
-  };
-
   const iconColors = {
     danger: 'text-red-400 bg-red-500/10',
     warning: 'text-amber-400 bg-amber-500/10',
@@ -48,17 +44,13 @@ export default function ConfirmModal({
           aria-modal="true"
           aria-labelledby="confirm-modal-title"
           aria-describedby="confirm-modal-description"
-          className="w-full max-w-[400px] bg-[#1a2332] border border-slate-700/60 rounded-xl shadow-2xl overflow-hidden"
+          className="w-full max-w-[400px] bg-[#111827] border border-white/8 rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.5),0_0_20px_rgba(59,130,246,0.05)] overflow-hidden"
         >
-          <div className="flex items-center justify-between px-6 py-5 border-b border-slate-700/50">
+          <div className="flex items-center justify-between px-6 py-5 border-b border-white/6">
             <h2 id="confirm-modal-title" className="text-xl font-bold text-white tracking-tight">{title}</h2>
-            <button
-              onClick={onCancel}
-              className="text-slate-400 hover:text-white transition-colors p-1 rounded-full hover:bg-white/5"
-              aria-label="Close dialog"
-            >
+            <Button variant="ghost" size="sm" iconOnly className="rounded-full" onClick={onCancel} aria-label="Close dialog">
               <X size={24} aria-hidden="true" />
-            </button>
+            </Button>
           </div>
           <div className="p-6 flex flex-col items-center gap-4">
             <div className={`p-3 rounded-full ${iconColors[variant]}`}>
@@ -68,19 +60,13 @@ export default function ConfirmModal({
               {message}
             </p>
           </div>
-          <div className="px-6 py-4 bg-[#151c28] border-t border-slate-700/50 flex justify-end gap-3">
-            <button 
-              onClick={onCancel}
-              className="px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-colors"
-            >
+          <div className="px-6 py-4 bg-[#0c1220] border-t border-white/6 flex justify-end gap-3">
+            <Button variant="ghost" onClick={onCancel}>
               {cancelLabel}
-            </button>
-            <button 
-              onClick={onConfirm}
-              className={`px-4 py-2 rounded-lg text-sm font-bold text-white transition-colors shadow-lg ${buttonColors[variant]}`}
-            >
+            </Button>
+            <Button variant={variant} onClick={onConfirm}>
               {confirmLabel}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

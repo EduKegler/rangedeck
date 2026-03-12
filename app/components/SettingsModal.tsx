@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { X, Minus, Plus } from 'lucide-react';
 import { useSettingsStore, type SettingsState } from '../stores/settingsStore';
 import { trackSettingsChanged } from '@/lib/analytics';
+import Button from './button';
 
 const CARD_SIZE_OPTIONS = [
   { value: 280, label: 'Small' },
@@ -102,77 +103,58 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
       />
       
       <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
-        <div className="w-full max-w-[480px] bg-[#1a2332] border border-slate-700/60 rounded-xl shadow-2xl overflow-hidden">
-          <div className="flex items-center justify-between px-6 py-5 border-b border-slate-700/50">
+        <div className="w-full max-w-[480px] bg-[#111827] border border-white/8 rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.5),0_0_20px_rgba(59,130,246,0.05)] overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-5 border-b border-white/6">
             <h2 className="text-xl font-bold text-white tracking-tight">Settings</h2>
-            <button 
-              onClick={onClose}
-              className="text-slate-400 hover:text-white transition-colors p-1 rounded-full hover:bg-white/5"
-            >
-              <X size={24} />
-            </button>
+            <Button variant="ghost" size="sm" iconOnly className="rounded-full" onClick={onClose} aria-label="Close dialog">
+              <X size={24} aria-hidden="true" />
+            </Button>
           </div>
 
           <div className="p-6 flex flex-col gap-6">
             <div className="flex flex-col gap-4">
               <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">Display</h3>
               
-              <div className="flex items-center justify-between p-4 bg-[#111822] rounded-lg border border-slate-700/50">
+              <div className="flex items-center justify-between p-4 bg-[#0c1220] rounded-lg border border-white/6">
                 <div className="flex flex-col gap-1">
                   <span className="text-white text-sm font-medium">Card Size</span>
                   <span className="text-slate-300 text-xs">Size of range cards on dashboard</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => handleCardSizeChange(-1)}
-                    disabled={currentCardSizeIndex <= 0}
-                    className="size-8 flex items-center justify-center rounded-lg bg-slate-700 hover:bg-slate-600 text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                  >
+                  <Button variant="secondary" size="sm" iconOnly onClick={() => handleCardSizeChange(-1)} disabled={currentCardSizeIndex <= 0}>
                     <Minus size={16} />
-                  </button>
+                  </Button>
                   <span className="text-white font-medium text-sm w-20 text-center">
                     {getCurrentCardSizeLabel()}
                   </span>
-                  <button
-                    onClick={() => handleCardSizeChange(1)}
-                    disabled={currentCardSizeIndex >= CARD_SIZE_OPTIONS.length - 1}
-                    className="size-8 flex items-center justify-center rounded-lg bg-slate-700 hover:bg-slate-600 text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                  >
+                  <Button variant="secondary" size="sm" iconOnly onClick={() => handleCardSizeChange(1)} disabled={currentCardSizeIndex >= CARD_SIZE_OPTIONS.length - 1}>
                     <Plus size={16} />
-                  </button>
+                  </Button>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-[#111822] rounded-lg border border-slate-700/50">
+              <div className="flex items-center justify-between p-4 bg-[#0c1220] rounded-lg border border-white/6">
                 <div className="flex flex-col gap-1">
                   <span className="text-white text-sm font-medium">Grid Text Size</span>
                   <span className="text-slate-300 text-xs">Hand names size in range cards</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => handleFontSizeChange(-1)}
-                    disabled={currentFontSizeIndex <= 0}
-                    className="size-8 flex items-center justify-center rounded-lg bg-slate-700 hover:bg-slate-600 text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                  >
+                  <Button variant="secondary" size="sm" iconOnly onClick={() => handleFontSizeChange(-1)} disabled={currentFontSizeIndex <= 0}>
                     <Minus size={16} />
-                  </button>
+                  </Button>
                   <span className="text-white font-medium text-sm w-12 text-center">
                     {getCurrentFontSizeLabel()}
                   </span>
-                  <button
-                    onClick={() => handleFontSizeChange(1)}
-                    disabled={currentFontSizeIndex >= FONT_SIZE_OPTIONS.length - 1}
-                    className="size-8 flex items-center justify-center rounded-lg bg-slate-700 hover:bg-slate-600 text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                  >
+                  <Button variant="secondary" size="sm" iconOnly onClick={() => handleFontSizeChange(1)} disabled={currentFontSizeIndex >= FONT_SIZE_OPTIONS.length - 1}>
                     <Plus size={16} />
-                  </button>
+                  </Button>
                 </div>
               </div>
 
-              <div className="p-4 bg-[#111822] rounded-lg border border-slate-700/50">
+              <div className="p-4 bg-[#0c1220] rounded-lg border border-white/6">
                 <span className="text-slate-300 text-xs uppercase tracking-wider mb-3 block">Preview</span>
                 <div 
-                  className="bg-[#1f2937] rounded-lg p-3 border border-slate-700/50 transition-all"
+                  className="bg-[#111827] rounded-lg p-3 border border-white/6 transition-all"
                   style={{ width: `${Math.min(localSettings.cardSize * 0.4, 180)}px` }}
                 >
                   <div className="grid grid-cols-5 gap-0.5">
@@ -185,7 +167,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                         key={hand}
                         className="aspect-square flex items-center justify-center rounded-sm"
                         style={{ 
-                          backgroundColor: [0,1,2,5,6,7,10,12,15,20,24].includes(i) ? '#ef4444' : '#334155',
+                          backgroundColor: [0,1,2,5,6,7,10,12,15,20,24].includes(i) ? '#ef4444' : '#1a2332',
                           fontSize: localSettings.gridFontSize === 0 ? 0 : `${localSettings.gridFontSize * 0.6}px`
                         }}
                       >
@@ -200,26 +182,17 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             </div>
           </div>
 
-          <div className="px-6 py-4 bg-[#151c28] border-t border-slate-700/50 flex justify-between">
-            <button 
-              onClick={handleReset}
-              className="px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
-            >
+          <div className="px-6 py-4 bg-[#0c1220] border-t border-white/6 flex justify-between">
+            <Button variant="ghost" onClick={handleReset} className="text-slate-400">
               Reset to Default
-            </button>
+            </Button>
             <div className="flex gap-3">
-              <button 
-                onClick={onClose}
-                className="px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-colors"
-              >
+              <Button variant="ghost" onClick={onClose}>
                 Cancel
-              </button>
-              <button 
-                onClick={handleSave}
-                className="px-4 py-2 rounded-lg text-sm font-bold text-white bg-[#3b82f6] hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/20"
-              >
+              </Button>
+              <Button variant="primary" onClick={handleSave}>
                 Save Settings
-              </button>
+              </Button>
             </div>
           </div>
         </div>

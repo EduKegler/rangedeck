@@ -19,17 +19,21 @@
   --color-border: var(--border);
   --color-muted: var(--muted);
   --color-grid-cell: var(--grid-cell);
+  --color-surface-raised: var(--surface-raised);
+  --color-grid-bg: var(--grid-bg);
   --font-sans: var(--font-inter);
   --font-mono: var(--font-jetbrains-mono);
 }
 
 .dark {
-  --background: #101722;
+  --background: #0c1220;
   --foreground: #ffffff;
-  --surface: #162030;
-  --border: #223149;
+  --surface: #111827;
+  --surface-raised: #1a2332;
+  --border: rgba(59,130,246,0.12);
   --muted: #90a7cb;
-  --grid-cell: #343e4f;
+  --grid-cell: #1a2332;
+  --grid-bg: #080d18;
 }
 
 body {
@@ -164,4 +168,23 @@ button:focus-visible {
   font-weight: 600;
   border-radius: 0.5rem;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}
+
+@layer components {
+  .btn-gradient {
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+    box-shadow: 0 2px 12px rgba(37,99,235,0.35);
+  }
+  .btn-gradient:hover {
+    background: linear-gradient(135deg, #1d4ed8, #2563eb);
+    box-shadow: 0 2px 16px rgba(37,99,235,0.45);
+  }
+
+  .glow-border-hover {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .glow-border-hover:hover {
+    border-color: rgba(59,130,246,0.35);
+    box-shadow: 0 0 18px rgba(59,130,246,0.1), 0 0 4px rgba(59,130,246,0.15);
+  }
 }

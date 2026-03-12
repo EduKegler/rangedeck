@@ -5,6 +5,7 @@ import { Plus, GripVertical, Pencil, Trash2 } from 'lucide-react';
 import { useToastStore } from '../stores/toastStore';
 import ConfirmModal from './ConfirmModal';
 import type { Label } from '../types/range';
+import Button from './button';
 
 interface LabelSidebarProps {
   labels: Label[];
@@ -127,20 +128,12 @@ export default function LabelSidebar({
 
   return (
     <>
-      <aside className="w-80 shrink-0 border-r border-[#223149] bg-[#162030] flex flex-col z-0 max-lg:w-64 max-md:hidden">
-        <div className="p-4 border-b border-[#223149]">
-          <button
-            onClick={onCreateLabel}
-            disabled={labels.length >= 6}
-            className={`flex w-full items-center justify-center gap-2 rounded-lg h-11 transition-colors text-white text-sm font-bold tracking-wide shadow-lg ${
-              labels.length >= 6 
-                ? 'bg-slate-700 cursor-not-allowed opacity-50' 
-                : 'bg-[#3b82f6] hover:bg-blue-600 cursor-pointer shadow-blue-900/30'
-            }`}
-          >
+      <aside className="w-80 shrink-0 border-r border-blue-500/8 bg-[#0e1525] flex flex-col z-0 max-lg:w-64 max-md:hidden">
+        <div className="p-4 border-b border-blue-500/8">
+          <Button variant="primary" size="lg" fullWidth onClick={onCreateLabel} disabled={labels.length >= 6} className="tracking-wide">
             <Plus size={18} strokeWidth={2.5} />
             {labels.length >= 6 ? 'Max 6 Labels' : 'New Label'}
-          </button>
+          </Button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-2 space-y-1">
@@ -167,13 +160,13 @@ export default function LabelSidebar({
                 onDrop={(e) => handleDrop(e, label.id)}
                 onClick={() => handleLabelClick(label.id)}
                 className={`group flex items-center gap-2 px-2 py-2.5 rounded-lg cursor-grab active:cursor-grabbing transition-all border ${
-                  isDragging 
-                    ? 'opacity-50 scale-95' 
-                    : isDragOver 
-                      ? 'border-blue-500 bg-blue-500/10' 
-                      : isActive 
-                        ? 'bg-[#223149]/60 border-[#223149]' 
-                        : 'bg-transparent border-transparent hover:bg-[#223149]/40 hover:border-[#223149]'
+                  isDragging
+                    ? 'opacity-50 scale-95'
+                    : isDragOver
+                      ? 'border-blue-500 bg-blue-500/10'
+                      : isActive
+                        ? 'bg-blue-500/6 border-blue-500/15 shadow-[0_0_12px_rgba(59,130,246,0.05)]'
+                        : 'bg-transparent border-transparent hover:bg-white/3 hover:border-white/6'
                 } ${count === 0 && !isDragging ? 'opacity-60 hover:opacity-100' : ''}`}
               >
                 <GripVertical 
@@ -199,35 +192,42 @@ export default function LabelSidebar({
                     </span>
                   </div>
                   
-                  <div className="w-full bg-gray-700 h-1 rounded-full overflow-hidden">
-                    <div 
+                  <div className="w-full bg-white/5 h-1 rounded-full overflow-hidden">
+                    <div
                       className="h-full rounded-full transition-all duration-300"
-                      style={{ 
+                      style={{
                         backgroundColor: label.color,
-                        width: `${percentage}%`
+                        width: `${percentage}%`,
+                        boxShadow: percentage > 0 ? `0 0 8px ${label.color}66` : 'none',
                       }}
                     />
                   </div>
                 </div>
 
-                <div className="h-6 w-px bg-[#223149] mx-1" />
+                <div className="h-6 w-px bg-white/6 mx-1" />
 
                 <div className="flex gap-0.5">
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    iconOnly
                     onClick={(e) => { e.stopPropagation(); handleEditLabel(label); }}
-                    className="text-[#90a7cb] hover:text-white p-1.5 rounded hover:bg-white/10"
+                    className="text-[#90a7cb] hover:text-white hover:bg-white/10"
                     aria-label={`Edit ${label.name} label`}
                   >
                     <Pencil size={14} aria-hidden="true" />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    iconOnly
                     onClick={(e) => { e.stopPropagation(); handleDeleteLabelClick(label); }}
                     disabled={labels.length === 1}
-                    className="text-[#90a7cb] hover:text-red-400 p-1.5 rounded hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="text-[#90a7cb] hover:text-red-400 hover:bg-white/10"
                     aria-label={labels.length === 1 ? "Cannot delete last label" : `Delete ${label.name} label`}
                   >
                     <Trash2 size={14} aria-hidden="true" />
-                  </button>
+                  </Button>
                 </div>
               </div>
             );
