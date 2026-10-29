@@ -4,6 +4,8 @@ A free poker range builder for creating, visualizing, and studying Texas Hold'em
 
 **[Open RangeDeck →](https://rangedeck.kegler.dev)**
 
+![RangeDeck with the Opens and Responses range categories](docs/screenshot.webp)
+
 ## About
 
 RangeDeck is a 100% client-side web app — no backend, no sign-up, no data leaves your browser. Ranges are saved to localStorage and settings to cookies, so everything persists across sessions.
